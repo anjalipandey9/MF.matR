@@ -19,4 +19,3 @@ plus it assigns binary state columns to each behavioral state class
 \examples{
 beh_mat()
 }
-

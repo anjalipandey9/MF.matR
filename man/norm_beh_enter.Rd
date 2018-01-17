@@ -19,4 +19,3 @@ single stripe of chemotaxis cue.
 \examples{
 norm_beh_enter()
 }
-

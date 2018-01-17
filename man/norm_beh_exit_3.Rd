@@ -19,4 +19,3 @@ Normalizes behavioral data +/- 2.5mm for animals EXITING
 \examples{
 norm.exit<-norm_beh_exit_3(df)
 }
-

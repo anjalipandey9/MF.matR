@@ -8,7 +8,8 @@
 
 beh_mat<- function (n) {
   environment<-globalenv()
-  behmat<-read.csv(tk_choose.files(caption = "Choose behmat file"))
+  message("Choose behmat file")
+  behmat<-read.csv(file.choose())
   id.cols<-c(colnames(behmat[1:(length(behmat)-2400)])) # use all but state columns as IDs
   behmat[, id.cols] <- lapply(behmat[,id.cols], factor) # convert all ID columns to factors
   behmat<-melt(behmat, id.vars=id.cols) # convert to long

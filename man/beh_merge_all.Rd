@@ -24,4 +24,3 @@ also required reshape2, tcl/tk and dplyr packages installed
 tot.mat<-beh_merge_all(400)
 beh_merge_all()
 }
-

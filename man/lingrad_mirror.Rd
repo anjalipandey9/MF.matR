@@ -19,4 +19,3 @@ For experiments with top of arena is max(cue) then orient == 1, else orient == 0
 \examples{
 tot.mat<-lingrad_mirror(df)
 }
-

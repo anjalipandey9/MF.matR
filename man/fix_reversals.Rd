@@ -21,4 +21,3 @@ requires plyr, zoo, dplyr and some data.table
 \examples{
 tot.mat<-fix_reversals(df)
 }
-

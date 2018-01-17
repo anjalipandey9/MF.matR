@@ -19,4 +19,3 @@ Normalizes behavioral data +/- 2.5mm for animals entering
 \examples{
 norm_beh_enter_3()
 }
-

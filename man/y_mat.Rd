@@ -17,4 +17,3 @@ Takes a matlab ymat file and converts it to long format for further analysis
 \examples{
 y_mat()
 }
-

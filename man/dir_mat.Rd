@@ -17,4 +17,3 @@ Takes a matlab dirmat file and converts it to long format
 \examples{
 dir_mat()
 }
-

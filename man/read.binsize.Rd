@@ -17,4 +17,3 @@ simple prompt for binsize - user input
 \examples{
 n <- read_binsize()
 }
-
