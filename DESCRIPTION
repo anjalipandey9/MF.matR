@@ -1,0 +1,12 @@
+Package: MF.matR
+Title: Takes Matlab MF data and does stuff with it
+Version: 0.0.0.9000
+Authors@R: person("Mike", "O'Donnell", email = "mikeod38@gmail.com", role = c("aut", "cre"))
+Description: A collection of functions to take microfluidics behavioral data and
+    incorporate into R. Also plotting tools etc. Main goal is to extract behavioral
+    state probability and plot.
+Depends:
+    R (>= 3.1.3)
+License: What license is it under?
+LazyData: true
+RoxygenNote: 5.0.0.9000
