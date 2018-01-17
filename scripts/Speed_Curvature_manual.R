@@ -121,15 +121,6 @@ WL.alldata %>% group_by(worm,time.bin) %>%
   coord_cartesian(xlim = c(0,100),ylim = c(0,250)) +
   geom_segment(aes(x=0, y=0, xend = 30, yend = 200), colour = "red") + theme_classic()
 
-#plot density map of points:
-WL.alldata %>% group_by(worm,time.bin) %>% dplyr::filter(bin.speed.new < 500) %>%
-  summarize(mean.speed = mean(bin.speed.new),mean.angle = mean(bin.ang.vel)) %>%
-  ggplot(aes(x = mean.angle, y = mean.speed)) +
-  stat_density2d(geom="raster", aes(fill = ..density..), contour = FALSE)  +
-  scale_fill_viridis(option = "inferno", begin = 0.05, end = 0.9) +
-  coord_cartesian(xlim = c(0,180),ylim = c(0,250)) +
-  geom_segment(aes(x=0, y=0, xend = 100, yend = 250), colour = "red") + theme_classic()
-
 # get count roam v dwell:
 pct.roam <- roam.pct(WL.alldata, slope = 200/30)
 pct.roam
