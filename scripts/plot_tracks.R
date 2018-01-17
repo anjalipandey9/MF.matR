@@ -1,5 +1,6 @@
 
 
+
 WL.pos.data <- function(bin.length, frame.rate, num.tracks) {
   library(ggplot2)
   library(dplyr)
@@ -81,7 +82,7 @@ WL.pos.data <- function(bin.length, frame.rate, num.tracks) {
   return(WL.alldata)
 }
 
-track.list <- WL.pos.data(bin.length = 2, frame.rate=10) # optional num.tracks = n for subset
+track.list <- WL.pos.data(bin.length = 2, frame.rate=6) # optional num.tracks = n for subset, bin.length in sec
 
 track.list %>% ggplot() + geom_point(aes(x=x, y=y, colour = worm, alpha = .1)) +
   scale_color_viridis(option = "inferno", discrete = TRUE) #to plot each track
