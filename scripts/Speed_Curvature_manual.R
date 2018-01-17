@@ -150,4 +150,4 @@ ggplotly(WL.alldata %>% dplyr::filter(Time < 30, ang.vel < 100) %>% ggplot(aes(x
 
 
 WL.alldata %>% ggplot(aes(x = x, y = y)) + geom_point(alpha = 0.2) +
-  scale_color_viridis(option = "inferno", discrete = TRUE
+  scale_color_viridis(option = "inferno", discrete = TRUE)
