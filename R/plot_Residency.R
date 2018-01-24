@@ -6,7 +6,7 @@
 #' @importFrom magrittr %<>%
 #' @export
 #' @examples
-#' read.csv("file") %>% plot_Residency(time_bine = 4, y_bin = 100, nopause = TRUE)
+#' plot_Residency(time_bin = 4, y_bin = 100, nopause = TRUE)
 #'
 
 plot_Residency <- function(df, time_bin, y_bin, nopause) {
