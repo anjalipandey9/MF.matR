@@ -10,6 +10,15 @@
 #'
 
 plot_stateProbs <- function(df, time_bin, y_bin, nopause) {
+  if(!suppressWarnings(
+    suppressPackageStartupMessages(
+      require(patchwork,
+              quietly = TRUE,
+              character.only = TRUE)))) {
+    devtools::install_github("thomasp85/patchwork")
+    suppressPackageStartupMessages(library(patchwork,character.only = TRUE))
+  }
+  devtools::install_github("")
   if (missing(nopause)) {
   df %>% dplyr::ungroup() %>%
       dplyr::mutate(time.bin = dplyr::ntile(Time,time_bin),
