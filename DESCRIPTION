@@ -16,6 +16,8 @@ Imports:
     ggthemes,
     viridis,
     tidyr
+Remotes:
+    thomasp85/patchwork
 License: What license is it under?
 LazyData: true
 RoxygenNote: 6.0.1

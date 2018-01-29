@@ -4,14 +4,14 @@
 \alias{plot_Residency}
 \title{Plot residency from Wormlab dauer data by space and time.}
 \usage{
-plot_Residency(df, time_bin, y_bin, nopause)
+plot_Residency(time_bin, y_bin, overlay)
 }
 \arguments{
-\item{df}{data frame}
-
 \item{time_bin}{number of bins to split plot}
 
 \item{y_bin}{number of position bins}
+
+\item{overlay}{optional argument to plot overlay of density for 2 time bins}
 }
 \description{
 Plot residency from Wormlab dauer data by space and time.

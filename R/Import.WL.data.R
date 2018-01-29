@@ -64,10 +64,10 @@ Import.WL.data <- function(bin.length, frame.rate, num.tracks) {
     tidyr::separate(variable, sep = "\\.", c("worm", "stuffer")) %>%
     dplyr::rename(speed = value)
 
-  WL.head.dir <- direction[,1:(num.tracks + 2)] %>%
+  WL.move.dir <- direction[,1:(num.tracks + 2)] %>%
     reshape2::melt(id.vars = c(1,2)) %>%
     tidyr::separate(variable, sep = "\\.", c("worm", "stuffer")) %>%
-    dplyr::rename(head.dir = value)
+    dplyr::rename(move.dir = value)
 
   WL.length <- length[,1:(num.tracks + 2)] %>%
     reshape2::melt(id.vars = c(1,2)) %>%
@@ -86,7 +86,7 @@ Import.WL.data <- function(bin.length, frame.rate, num.tracks) {
 
   print(system.time(WL.alldata <- list(WL.centroid,
                                        WL.speed,
-                                       WL.head.dir,
+                                       WL.move.dir,
                                        WL.length,
                                        WL.width,
                                        WL.state)))
@@ -140,9 +140,37 @@ max_runs <- dplyr::full_join(backwards,forward)
 
 # switch direction of worms that have longer runs in reverse than forward
 WL.alldata <- WL.alldata %>%
-  dplyr::mutate(speed = dplyr::case_when(
+  dplyr::mutate(
+    speed = dplyr::case_when(
     worm %in% max_runs[max_runs$Max.back > max_runs$Max.for,]$worm ~ -(speed),
-    TRUE ~ speed))
+    TRUE ~ speed),
+    corrected = dplyr::case_when(
+      worm %in% max_runs[max_runs$Max.back > max_runs$Max.for,]$worm ~ 1,
+      TRUE ~ 0),
+    head.dir = dplyr::case_when(
+      corrected == 0 &
+        (move.dir %% 360) %% 360 < 155 &
+        (move.dir %% 360) %% 360 > 25 ~ "up",
+      corrected == 0 &
+        (move.dir %% 360) %% 360 > 205 &
+        (move.dir %% 360) %% 360 < 335 ~ "down",
+      corrected == 0 &
+        (move.dir %% 360) %% 360 > 155 &
+        (move.dir %% 360) %% 360 < 205 ~ "right",
+      corrected == 0 &
+        ((move.dir %% 360) %% 360 < 25 |
+         (move.dir %% 360) %% 360 > 335) ~ "left",
+      corrected == 1 &
+        (move.dir %% 360) %% 360 < 155 &
+        (move.dir %% 360) %% 360 > 25 ~ "down",
+      corrected == 1 &
+        (move.dir %% 360) %% 360 > 205 &
+        (move.dir %% 360) %% 360 < 335 ~ "up",
+      corrected == 1 &
+        (move.dir %% 360) %% 360 > 155 &
+        (move.dir %% 360) %% 360 < 205 ~ "left",
+      TRUE ~ "right"
+    ))
 #
 
 message("adding behavioral states")
