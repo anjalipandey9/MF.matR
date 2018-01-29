@@ -2,19 +2,19 @@
 % Please edit documentation in R/plot_stateProbs.R
 \name{plot_stateProbs}
 \alias{plot_stateProbs}
-\title{Plot state probability from Wormlab dauer data by space and time.}
+\title{Plot state probability from Wormlab data by space and time.}
 \usage{
-plot_stateProbs(df, time_bin, y_bin, nopause)
+plot_stateProbs(time_bin, y_bin)
 }
 \arguments{
-\item{df}{data frame}
-
 \item{time_bin}{number of bins to split plot}
 
 \item{y_bin}{number of position bins}
+
+\item{df}{data frame}
 }
 \description{
-Plot state probability from Wormlab dauer data by space and time.
+Plot state probability from Wormlab data by space and time.
 }
 \examples{
 plot_stateProbs <-

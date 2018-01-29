@@ -3,9 +3,9 @@
 \name{beh_merge_all}
 \alias{beh_merge_all}
 \title{beh_merge_all function
-combines functions beh_mat, y_mat, and dir_mat to 
+combines functions beh_mat, y_mat, and dir_mat to
 make a merged behavioral state object incorporating direction, position and state information
-about each worm. Requires beh_mat, y_mat, and dir_mat to be defined by installing MF.matR package.
+about each worm from Matlab tracking. Requires beh_mat, y_mat, and dir_mat to be defined by installing MF.matR package.
 also required reshape2, tcl/tk and dplyr packages installed}
 \usage{
 beh_merge_all(n)
@@ -15,9 +15,9 @@ beh_merge_all(n)
 }
 \description{
 beh_merge_all function
-combines functions beh_mat, y_mat, and dir_mat to 
+combines functions beh_mat, y_mat, and dir_mat to
 make a merged behavioral state object incorporating direction, position and state information
-about each worm. Requires beh_mat, y_mat, and dir_mat to be defined by installing MF.matR package.
+about each worm from Matlab tracking. Requires beh_mat, y_mat, and dir_mat to be defined by installing MF.matR package.
 also required reshape2, tcl/tk and dplyr packages installed
 }
 \examples{

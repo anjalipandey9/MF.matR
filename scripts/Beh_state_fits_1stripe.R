@@ -26,15 +26,15 @@ tot.mat.exit<-norm_beh_exit(tot.mat)
 # aggregate - calculate mean by groupings ---------------------------------
 
 
-# calculate mean for each worm by time bin and norm.pos
-norm_timbin_beh_exit<-aggregate(cbind(Pir, For, Rev, Curve) ~ genotype + norm.pos + bin + condition + wormID, data = tot.mat.exit, FUN=mean)
-norm_timbin_beh_enter<-aggregate(cbind(Pir, For, Rev, Curve) ~ genotype + norm.pos + bin + condition + wormID, data = tot.mat.enter, FUN=mean)
+# calculate mean for each worm by time bin and norm.y
+norm_timbin_beh_exit<-aggregate(cbind(Pir, For, Rev, Curve) ~ genotype + norm.y + bin + condition + wormID, data = tot.mat.exit, FUN=mean)
+norm_timbin_beh_enter<-aggregate(cbind(Pir, For, Rev, Curve) ~ genotype + norm.y + bin + condition + wormID, data = tot.mat.enter, FUN=mean)
 
 
 # plot_exit ---------------------------------------------------------------
 
 
-plot1<-ggplot(norm_timbin_beh_exit, aes(x=norm.pos)) +
+plot1<-ggplot(norm_timbin_beh_exit, aes(x=norm.y)) +
   annotate("rect", 0,0,-2.5,-0,0,1, fill="lightblue", alpha=0.3) +
   geom_smooth(aes(y=Pir, linetype=condition), method = loess, level=0.99, alpha=0.15, colour="blue") +
   geom_smooth(aes(y=Rev, linetype=condition), method = loess, level=0.99, alpha=0.15,colour="red") +
@@ -50,7 +50,7 @@ plot1
 # plot enter --------------------------------------------------------------
 
 
-plot2<-ggplot(norm_timbin_beh_enter, aes(x=norm.pos)) +
+plot2<-ggplot(norm_timbin_beh_enter, aes(x=norm.y)) +
   annotate("rect", 0,0,2.5,-0,0,1, fill="lightblue", alpha=0.3) +
   geom_smooth(aes(y=Pir, linetype=condition), method = loess, level=0.99, alpha=0.15, colour="blue") +
   geom_smooth(aes(y=Rev, linetype=condition), method = loess, level=0.99, alpha=0.15,colour="red") +
@@ -65,12 +65,12 @@ plot2
 
 
 # sanity check ------------------------------------------------------------
-sanity<-ggplot(tot.mat.enter, aes(x=norm.pos)) +
+sanity<-ggplot(tot.mat.enter, aes(x=norm.y)) +
   geom_density(aes(linetype=condition)) +
   theme_my
 sanity
 
-sanity2<-ggplot(tot.mat.exit, aes(x=norm.pos)) +
+sanity2<-ggplot(tot.mat.exit, aes(x=norm.y)) +
   geom_density(aes(linetype=condition)) +
   theme_my
 sanity2

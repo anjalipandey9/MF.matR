@@ -4,17 +4,20 @@
 \alias{norm_beh_exit}
 \title{norm_beh_exit function
 Normalizes behavioral data +/- 2.5mm for animals EXITING a
-single stripe of chemotaxis cue.}
+single CENTER stripe of a chemotaxis cue.}
 \usage{
-norm_beh_exit(df)
+norm_beh_exit(df, bounds)
 }
 \arguments{
 \item{df}{input merged data.frame containing output from beh_mat, dir_mat and y_mat files.}
+
+\item{bounds}{optional argument to manually specify cue position boundaries. Should be manually entered for
+matlab data for now}
 }
 \description{
 norm_beh_exit function
 Normalizes behavioral data +/- 2.5mm for animals EXITING a
-single stripe of chemotaxis cue.
+single CENTER stripe of a chemotaxis cue.
 }
 \examples{
 norm_beh_exit()

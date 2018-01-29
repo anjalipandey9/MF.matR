@@ -15,7 +15,8 @@ Imports:
     beeswarm,
     ggthemes,
     viridis,
-    tidyr
+    tidyr,
+    patchwork
 Remotes:
     thomasp85/patchwork
 License: What license is it under?
