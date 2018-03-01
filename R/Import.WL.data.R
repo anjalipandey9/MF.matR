@@ -9,13 +9,17 @@
 #' @examples
 #' Import.WL.data(bin.length = 2, frame.rate = 6)
 
-Import.WL.data <- function(bin.length, frame.rate, num.tracks) {
+Import.WL.data <- function(bin.length, frame.rate, num.tracks, multiple, ...) {
 
   #### import data ### - use  readr to improve speed
-  message("Choose a position analysis file")
-  file <- file.choose()
-  file.pref <- basename(file) %>% strsplit(., c("Position","position")) %>% unlist()
-  folder <- dirname(file)
+  if(missing(multiple)) {
+    message("Choose a position analysis file")
+    filename <- file.choose()
+  } else {
+    filename <- mult_pos_file
+  }
+  file.pref <- basename(filename) %>% strsplit(., c("Position","position")) %>% unlist()
+  folder <- dirname(filename)
   file_list  <- list.files(path = file.path(folder),pattern = file.pref[1])
 
   position.path <- file.path(folder, file_list[grep("osition.csv",file_list)])

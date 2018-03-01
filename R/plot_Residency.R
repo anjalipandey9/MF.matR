@@ -21,7 +21,7 @@ plot_Residency <- function(time_bin, y_bin, overlay, multiple) {
 if(missing(multiple)) {
   filename <- file.choose()
 } else {
-  filename <- mult_file
+  filename <- mult_track_file
 }
 
 folder <- dirname(filename)
