@@ -23,83 +23,65 @@ plot_stateProbs <- function(time_bin, y_bin) {
     alldata.enter<-MF.matR::norm_beh_enter(df)
     alldata.exit<-MF.matR::norm_beh_exit(df)
 
-    plot1 <- alldata.enter %>% dplyr::ungroup() %>%
-      dplyr::mutate(time.bin = dplyr::ntile(Time,time_bin),
-           y.bin = dplyr::ntile(norm.y,y_bin),
-           state = factor(state)) %>%
-    dplyr::count(time.bin,y.bin,state) %>%
-    dplyr::group_by(time.bin,y.bin) %>% #maybe group by worm as well
-    dplyr::mutate(prop = prop.table(n)) %>%
+    probs_all <- . %>% dplyr::ungroup() %>%
+      dplyr::mutate(time.bin = as.numeric(cut(Time,time_bin)),
+                    y.bin = as.numeric(cut(norm.y,y_bin)),
+                    state = factor(state)) %>%
+      dplyr::count(time.bin,y.bin,state) %>%
+      dplyr::group_by(time.bin,y.bin) %>% #maybe group by worm as well
+      dplyr::mutate(prop = prop.table(n)) %>%
+      group_by(time.bin, y.bin) %>% filter(sum(n) > 10)
+
+    probs_mobile <- . %>% dplyr::ungroup() %>%
+      dplyr::filter(state != "pause") %>%
+      dplyr::mutate(time.bin = as.numeric(cut(Time,time_bin)),
+                    y.bin = as.numeric(cut(norm.y,y_bin)),
+                    state = factor(state)) %>%
+      dplyr::count(time.bin,y.bin,state) %>%
+      dplyr::group_by(time.bin,y.bin) %>% #maybe group by worm as well
+      dplyr::mutate(prop = prop.table(n)) %>%
+      group_by(time.bin, y.bin) %>% filter(sum(n) > 10)
+
+
+    plot1 <- alldata.enter %>% probs_all() %>%
     ggplot(aes(x = y.bin, y = prop)) +
       annotate("rect", xmin=50,xmax=100,ymin=0,ymax =1, fill="lightblue", alpha=0.3) +
-    geom_point(aes(color = state), alpha = 0.2) + geom_smooth(aes(group = state, colour = state)) +
-    facet_wrap(~time.bin) + labs(title = "Stripe Entry") + guides(colour = FALSE)
+    geom_point(aes(color = state, alpha = n)) + geom_smooth(aes(group = state, colour = state, weight = n)) +
+    facet_wrap(~time.bin, scales = "free") + labs(title = "Stripe Entry") + guides(colour = FALSE)
 
-    plot2 <- alldata.exit %>% dplyr::ungroup() %>%
-    dplyr::mutate(time.bin = dplyr::ntile(Time,time_bin),
-                  y.bin = dplyr::ntile(y,y_bin),
-                  state = factor(state)) %>%
-    dplyr::count(time.bin,y.bin,state) %>%
-    dplyr::group_by(time.bin,y.bin) %>% #maybe group by worm as well
-    dplyr::mutate(prop = prop.table(n)) %>%
+    plot2 <- alldata.exit %>% probs_all() %>%
     ggplot(aes(x = y.bin, y = prop)) +
       annotate("rect", xmin=0,xmax=50,ymin=0,ymax =1,fill="lightblue", alpha=0.3) +
-    geom_point(aes(color = state), alpha = 0.2) + geom_smooth(aes(group = state, colour = state)) +
-    facet_wrap(~time.bin) + labs(title = "Stripe Exit")
+    geom_point(aes(color = state, alpha = n)) + geom_smooth(aes(group = state, colour = state,weight = n)) +
+    facet_wrap(~time.bin, scales = "free") + labs(title = "Stripe Exit")
 
-    plot3 <- alldata.enter %>% dplyr::ungroup() %>%
-      dplyr::filter(state != "pause") %>%
-      dplyr::mutate(time.bin = dplyr::ntile(Time,time_bin),
-                    y.bin = dplyr::ntile(norm.y,y_bin),
-                    state = factor(state)) %>%
-      dplyr::count(time.bin,y.bin,state) %>%
-      dplyr::group_by(time.bin,y.bin) %>% #maybe group by worm as well
-      dplyr::mutate(prop = prop.table(n)) %>%
+    plot3 <- alldata.enter %>% probs_mobile() %>%
+      filter(state != "pause") %>%
       ggplot(aes(x = y.bin, y = prop)) +
       annotate("rect", xmin=50,xmax=100,ymin=0,ymax =1, fill="lightblue", alpha=0.3) +
-      geom_point(aes(color = state), alpha = 0.2) + geom_smooth(aes(group = state, colour = state)) +
-      facet_wrap(~time.bin) + labs(title = "Stripe Entry (mobile fraction)") + guides(colour = FALSE)
+      geom_point(aes(color = state, alpha = n)) + geom_smooth(aes(group = state, colour = state, weight = n)) +
+      facet_wrap(~time.bin, scales = "free") + labs(title = "Stripe Entry (mobile fraction)") + guides(colour = FALSE)
 
-    plot4 <- alldata.exit %>% dplyr::ungroup() %>%
-      dplyr::filter(state != "pause") %>%
-      dplyr::mutate(time.bin = dplyr::ntile(Time,time_bin),
-                    y.bin = dplyr::ntile(y,y_bin),
-                    state = factor(state)) %>%
-      dplyr::count(time.bin,y.bin,state) %>%
-      dplyr::group_by(time.bin,y.bin) %>% #maybe group by worm as well
-      dplyr::mutate(prop = prop.table(n)) %>%
+    plot4 <- alldata.exit %>% probs_mobile() %>%
+      filter(state != "pause") %>%
       ggplot(aes(x = y.bin, y = prop)) +
       annotate("rect", xmin=0,xmax=50,ymin=0,ymax =1,fill="lightblue", alpha=0.3) +
-      geom_point(aes(color = state), alpha = 0.2) + geom_smooth(aes(group = state, colour = state)) +
-      facet_wrap(~time.bin) + labs(title = "Stripe Exit (mobile fraction)")
+      geom_point(aes(color = state, alpha = n)) + geom_smooth(aes(group = state, colour = state, weight = n)) +
+      facet_wrap(~time.bin, scales = "free") + labs(title = "Stripe Exit (mobile fraction)")
 
-    plot5 <- alldata.enter %>% dplyr::ungroup() %>%
-      dplyr::filter(state != "pause") %>%
-      dplyr::mutate(time.bin = dplyr::ntile(Time,time_bin),
-                    y.bin = dplyr::ntile(norm.y,y_bin),
-                    state = factor(state)) %>%
-      dplyr::count(time.bin,y.bin,state) %>%
-      dplyr::group_by(time.bin,y.bin) %>% #maybe group by worm as well
-      dplyr::mutate(prop = prop.table(n)) %>%
+    plot5 <- alldata.enter %>% probs_mobile() %>%
       dplyr::filter(state == "reversal") %>%
       ggplot(aes(x = y.bin, y = prop)) +
       annotate("rect", xmin=50,xmax=100,ymin=0,ymax =0.2, fill="lightblue", alpha=0.3) +
-      geom_point(aes(color = state), alpha = 0.2) + geom_smooth(aes(group = state, colour = state)) +
-      facet_wrap(~time.bin) + labs(title = "Stripe Entry (mobile fraction)") + guides(colour = FALSE)
+      geom_point(aes(color = state, alpha = n)) + geom_smooth(aes(group = state, colour = state, weight = n)) +
+      facet_wrap(~time.bin, scales = "free") + labs(title = "Stripe Entry (mobile fraction)") + guides(colour = FALSE)
 
-    plot6 <- alldata.exit %>% dplyr::ungroup() %>%
-      dplyr::filter(state != "pause") %>%
-      dplyr::mutate(time.bin = dplyr::ntile(Time,time_bin),
-                    y.bin = dplyr::ntile(y,y_bin),
-                    state = factor(state)) %>%
-      dplyr::count(time.bin,y.bin,state) %>%
-      dplyr::group_by(time.bin,y.bin) %>% #maybe group by worm as well
-      dplyr::mutate(prop = prop.table(n)) %>%
+    plot6 <- alldata.exit %>% probs_mobile() %>%
       dplyr::filter(state == "reversal") %>%
-      ggplot(aes(x = y.bin, y = prop)) +
+      ggplot(aes(x = y.bin, y = prop, weight = n)) +
       annotate("rect", xmin=0,xmax=50,ymin=0,ymax = 0.2,fill="lightblue", alpha=0.3) +
-      geom_point(aes(color = state), alpha = 0.2) + geom_smooth(aes(group = state, colour = state)) +
-      facet_wrap(~time.bin) + labs(title = "Stripe Exit (mobile fraction)")
+      geom_point(aes(color = state, alpha = n)) + geom_smooth(aes(group = state, colour = state, weight = n)) +
+      facet_wrap(~time.bin, scales = "free") + labs(title = "Stripe Exit (mobile fraction)")
 
   plot_all <- (plot1 + plot2 &
   scale_colour_manual(values = c("#8A2BE2", "#0000FF", "#7FFF00", "#006400", "#FF7256"))) /
