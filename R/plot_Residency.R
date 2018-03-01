@@ -9,7 +9,7 @@
 #' plot_Residency(time_bin = 4, y_bin = 100, nopause = TRUE)
 #'
 
-plot_Residency <- function(time_bin, y_bin, overlay) {
+plot_Residency <- function(time_bin, y_bin, overlay, multiple) {
     # if(!suppressWarnings(
     #   suppressPackageStartupMessages(
     #     require(patchwork,
@@ -18,24 +18,29 @@ plot_Residency <- function(time_bin, y_bin, overlay) {
     #   devtools::install_github("thomasp85/patchwork")
     #   suppressPackageStartupMessages(library(patchwork,character.only = TRUE))
     # }
+if(missing(multiple)) {
+  filename <- file.choose()
+} else {
+  filename <- mult_file
+}
 
-file <- file.choose()
-folder <- dirname(file)
-file.pref <- basename(file) %>% strsplit(., "all_track_data.csv") %>% unlist()
+folder <- dirname(filename)
+file.pref <- basename(filename) %>% strsplit(., "all_track_data.csv") %>% unlist()
 #devtools::install_github("thomasp85/patchwork")
 library(ggplot2)
 library(patchwork)
 message("reading in data")
-df <- read.csv(file) %>%
+df <- read.csv(filename) %>%
   #dplyr::ungroup() %>%
   dplyr::mutate(
-    time.bin = dplyr::ntile(Time, time_bin),
-    dens.time.bin = factor(dplyr::ntile(Time, 2)),
-    y.bin = dplyr::ntile(y, y_bin),
+    time.bin = cut(Time, time_bin),
+    dens.time.bin = factor(cut(Time, 2)),
+    y.bin = cut(y, y_bin),
+    y_numeric = as.numeric(y.bin),
     state = factor(state)
   )
 message("plotting histograms")
-p1 <- ggplot(df, aes(x = y.bin)) +
+p1 <- ggplot(df, aes(x = y_numeric)) +
   geom_histogram(colour = "grey", fill = "white", bins = y_bin) +
   geom_density(aes(y = ..count..)) +
   facet_wrap(~time.bin) +
@@ -43,7 +48,7 @@ p1 <- ggplot(df, aes(x = y.bin)) +
   labs(title = "All Tracks") + guides(color = FALSE)
 p2 <- df %>%
   dplyr::filter(state != "pause") %>%
-  ggplot(aes(x = y.bin)) +
+  ggplot(aes(x = y_numeric)) +
   geom_histogram(fill = "grey", bins = y_bin) +
   geom_density(aes(y = ..count..)) +
   facet_wrap(~time.bin) +
@@ -55,7 +60,7 @@ if (missing(overlay)) {
   message("plotting residence density by time")
   p4 <- df %>%
     dplyr::filter(state != "pause") %>%
-    ggplot(aes(x = y.bin)) +
+    ggplot(aes(x = y_numeric)) +
     # geom_histogram(fill = "grey", bins = y_bin, alpha = 0.2, aes(colour = time.bin)) +
     geom_density(aes(y = ..count.., fill = dens.time.bin), alpha =.7) +
     theme_classic() +

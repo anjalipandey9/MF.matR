@@ -102,7 +102,7 @@ Import.WL.data <- function(bin.length, frame.rate, num.tracks) {
              del.x2 = x - lag(x),
              del.x1 = lag(x) - lag(x, n=2), #vector from t(-2) to t(-1) for curve angle
              del.y1 = lag(y) - lag(y, n=2),
-             time.bin = dplyr::ntile(Time, n.bins),
+             time.bin = cut(Time, n.bins),
              curve.ang = as.numeric(mapply(MF.matR::curve.angle, del.x1, del.y1, del.x2, del.y2))*180/pi) %>%
       dplyr::group_by(worm, time.bin) %>%
       dplyr::mutate(bin.speed = abs(mean(speed, na.rm=TRUE)),
