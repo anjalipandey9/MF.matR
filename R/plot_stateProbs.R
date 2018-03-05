@@ -2,12 +2,12 @@
 #' @param df data frame
 #' @param time_bin number of bins to split plot
 #' @param y_bin number of position bins
+#' @param orient orientation of the cue, 1 = center stripe, 0 = outer 2 stripes
 #' @importFrom magrittr %>%
 #' @importFrom magrittr %<>%
 #' @export
 #' @examples
-#' plot_stateProbs <-
-#'
+#' plot_stateProbs(time_bin = 4, y_bin  = 100, orient = 1)
 
 plot_stateProbs <- function(time_bin, y_bin) {
   message("choose all track data .csv file")
@@ -20,8 +20,15 @@ plot_stateProbs <- function(time_bin, y_bin) {
   message("reading in data")
   df <- read.csv(file)
 
+  if(orient == 1) {
     alldata.enter<-MF.matR::norm_beh_enter(df)
     alldata.exit<-MF.matR::norm_beh_exit(df)
+  }
+
+  if(orient == 0) {
+    alldata.enter<-MF.matR::norm_beh_exit(df)
+    alldata.exit<-MF.matR::norm_beh_exit(df)
+  }
 
     probs_all <- . %>% dplyr::ungroup() %>%
       dplyr::mutate(time.bin = as.numeric(cut(Time,time_bin)),

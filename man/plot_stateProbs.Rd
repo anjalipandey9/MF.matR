@@ -12,11 +12,12 @@ plot_stateProbs(time_bin, y_bin)
 \item{y_bin}{number of position bins}
 
 \item{df}{data frame}
+
+\item{orient}{orientation of the cue, 1 = center stripe, 0 = outer 2 stripes}
 }
 \description{
 Plot state probability from Wormlab data by space and time.
 }
 \examples{
-plot_stateProbs <-
-
+plot_stateProbs(time_bin = 4, y_bin  = 100, orient = 1)
 }
