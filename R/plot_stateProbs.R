@@ -80,7 +80,7 @@ plot_stateProbs <- function(time_bin, y_bin) {
       dplyr::filter(state == "reversal") %>%
       ggplot(aes(x = y.bin, y = prop, weight = n)) +
       annotate("rect", xmin=0,xmax=50,ymin=0,ymax = 0.2,fill="lightblue", alpha=0.3) +
-      geom_point(aes(color = state, alpha = n)) + geom_smooth(aes(group = state, colour = state, weight = n)) +
+      geom_point(aes(color = state, alpha = n)) + geom_smooth(aes(group = state, colour = state)) +
       facet_wrap(~time.bin, scales = "free") + labs(title = "Stripe Exit (mobile fraction)")
 
   plot_all <- (plot1 + plot2 &
