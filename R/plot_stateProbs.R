@@ -21,11 +21,13 @@ plot_stateProbs <- function(time_bin, y_bin) {
   df <- read.csv(file)
 
   if(orient == 1) {
+    message("setting orientation with cue in middle stripe")
     alldata.enter<-MF.matR::norm_beh_enter(df)
     alldata.exit<-MF.matR::norm_beh_exit(df)
   }
 
   if(orient == 0) {
+    message("setting orientation with cue in outer stripes")
     alldata.enter<-MF.matR::norm_beh_exit(df)
     alldata.exit<-MF.matR::norm_beh_exit(df)
   }
