@@ -9,7 +9,7 @@
 #' @examples
 #' plot_stateProbs(time_bin = 4, y_bin  = 100, orient = 1)
 
-plot_stateProbs <- function(time_bin, y_bin) {
+plot_stateProbs <- function(time_bin, y_bin, orient) {
   message("choose all track data .csv file")
   file <- file.choose()
   folder <- dirname(file)

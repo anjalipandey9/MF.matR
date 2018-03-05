@@ -4,16 +4,16 @@
 \alias{plot_stateProbs}
 \title{Plot state probability from Wormlab data by space and time.}
 \usage{
-plot_stateProbs(time_bin, y_bin)
+plot_stateProbs(time_bin, y_bin, orient)
 }
 \arguments{
 \item{time_bin}{number of bins to split plot}
 
 \item{y_bin}{number of position bins}
 
-\item{df}{data frame}
-
 \item{orient}{orientation of the cue, 1 = center stripe, 0 = outer 2 stripes}
+
+\item{df}{data frame}
 }
 \description{
 Plot state probability from Wormlab data by space and time.
