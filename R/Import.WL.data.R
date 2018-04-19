@@ -102,10 +102,10 @@ Import.WL.data <- function(bin.length, frame.rate, num.tracks, multiple, ...) {
   print(system.time(
     WL.alldata <- WL.alldata %>%
       dplyr::group_by(worm) %>%
-      dplyr::mutate(del.y2 =  y - lag(y), # change from previous point (t-1) to (t0)
-             del.x2 = x - lag(x),
-             del.x1 = lag(x) - lag(x, n=2), #vector from t(-2) to t(-1) for curve angle
-             del.y1 = lag(y) - lag(y, n=2),
+      dplyr::mutate(del.y1 =  y - lag(y), # change from previous point (t-1) to (t0)
+             del.x1 = x - lag(x),
+             del.x2 = lag(x) - lag(x, n=2), #vector from t(-2) to t(-1) for curve angle
+             del.y2 = lag(y) - lag(y, n=2),
              time.bin = cut(Time, n.bins),
              curve.ang = as.numeric(mapply(MF.matR::curve.angle, del.x1, del.y1, del.x2, del.y2))*180/pi) %>%
       dplyr::group_by(worm, time.bin) %>%

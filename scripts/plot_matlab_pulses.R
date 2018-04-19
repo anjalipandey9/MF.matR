@@ -45,7 +45,9 @@ library(tidyr)
       state == "4" ~ "Pause",
       state %in% c("5","6") ~ "Pirouette",
       TRUE ~ "undetermined"
-    ))
+      ),
+      TimeInCycle = FrameInCycle/2
+    )
 
   #write raw data to csv:
   data.table::fwrite(mat.all.data, file.path(here::here(),"data","matlab_allTrackData.csv"))
