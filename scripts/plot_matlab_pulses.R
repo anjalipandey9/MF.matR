@@ -71,8 +71,13 @@ library(tidyr)
 
   data.table::fwrite(state_probs_bycycle, file.path(here::here(),"data","state_probs_bycycle.csv"))
 
+  #make proportion table averaging over cycles and worms, but this time loop over FrameInCycle
+pre_loop <- state_probs %>%
+  filter(FrameInCycle > 40) %>% mutate(FrameInCycle = FrameInCycle - 80) %>%
+  rbind(state_probs,.) %>% group_by(genotype, cue, date, side) %>% arrange(FrameInCycle)
 
 
+data.table::fwrite(pre_loop, file.path(here::here(),"data","state_probs_byAssayLoop.csv"))
 
 
   dplyr::filter(state == "Forward",
@@ -127,3 +132,4 @@ library(tidyr)
       ),
       stat = "smooth", method = "loess", span = 0.3
     ) + facet_wrap(~cycle_bin)
+
