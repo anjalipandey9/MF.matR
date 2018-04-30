@@ -92,8 +92,8 @@ if(center_on_pulse == 1) {
     ggplot(aes(x = time, y = fct_reorder(factor(animal_num), delF, max_delta))) +
     geom_tile(aes(fill = delF)) +
     scale_fill_viridis_c(option = "magma",
-                         breaks = c(-1,0,1),
-                         labels = c("-1", "0", "1"),
+                         breaks = c(-.5,0,1.5),
+                         labels = c("-.5", "0", "1.5"),
                          limits = c(-1,1),
                          oob =squish) +
     theme_classic() +
@@ -107,7 +107,7 @@ if(center_on_pulse == 1) {
     geom_tile(aes(fill = delF)) +
     scale_fill_viridis_c(option = "magma",
                          breaks = c(-1,0,1),
-                         labels = c("-1", "0", "1"),
+                         labels = c("-1.5", "0", ".5"),
                          limits = c(-1,1),
                          oob =squish) +
     theme_classic() +
