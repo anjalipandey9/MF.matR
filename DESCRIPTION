@@ -16,7 +16,8 @@ Imports:
     ggthemes,
     viridis,
     tidyr,
-    patchwork
+    patchwork,
+    scales
 Remotes:
     thomasp85/patchwork
 License: What license is it under?

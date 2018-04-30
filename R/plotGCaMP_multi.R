@@ -30,6 +30,7 @@ plotGCaMP_multi <- function(FileFilter,
   library(tidyverse)
   library(magrittr)
   library(patchwork)
+  library(scales)
   FileFilter <- quo_name(enquo(FileFilter)) # make Filter usable inside other functions
   genotype <- quo_name(enquo(genotype))
   cue <- quo_name(enquo(cue))

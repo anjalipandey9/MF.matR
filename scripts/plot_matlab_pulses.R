@@ -4,6 +4,7 @@
 library(R.matlab)
 library(tidyr)
 
+
   data <- readMat(file.choose())
   conditions <- names(data)
   #get filenames from matlab structure using legnth of each dataset and given each dataset has 28 fields:
