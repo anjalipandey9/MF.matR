@@ -2,7 +2,7 @@
 #'
 #' Function is a wrapper for exp.fit.all.log.lin which outputs corrected GCaMP signals as well as plots showing
 #' original and corrected signals. Also plots average trace for GCaMP signal. Inputs are matfiles.
-#' The script searches recursively for matfiles from a starter file (can be any placeholder file). Need to exclude
+#' The script searches recursively for matfiles from a startPulseer file (can be any placeholder file). Need to exclude
 #' matfiles that are not GCaMP files either using FileFilter, or by putting only relevant files in the folder.
 #' Requires max_delta helper function
 #' time etc...
@@ -10,9 +10,13 @@
 #' @param genotype label the genotype for these data
 #' @param cue label the stimulus cue.
 #' @param food label to food cue
-#' @param start begin of stimulus
-#' @param end end time of stimulus
+#' @param startPulse begin of stimulus
+#' @param endPulse endPulse time of stimulus
 #' @param center_on_pulse optional parameter to center delF values by the mean of the stimulus duration
+#' 1 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of increase)
+#' 2 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of increase)
+#' 3 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of decrease)
+#' 4 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of decrease)
 #'
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
@@ -23,8 +27,8 @@ plotGCaMP_multi <- function(FileFilter,
                             genotype,
                             cue = cue,
                             food = OP50,
-                            start = 30,
-                            end = 60,
+                            startPulse = 30,
+                            endPulse = 60,
                             center_on_pulse = FALSE,
                             ...) {
   library(tidyverse)
@@ -46,36 +50,111 @@ plotGCaMP_multi <- function(FileFilter,
   data <- map(files, ~ exp.fit.all.log.lin(filename = ., skip.time = 10))
   data %<>% data_frame(data = .,
                       animal = filenames,
-                      animal_num = seq(from = 1, to = length(filenames)),
+                      animal_num = factor(seq(from = 1, to = length(filenames))),
                       genotype = genotype,
                       cue = cue,
                       food = food)
 
-  if(center_on_pulse %in% c(1,2)) {
+  # recenter mean values
+  if(center_on_pulse %in% c(1,3)) {
+
     means <- data %>% unnest %>%
       group_by(animal) %>%
-      filter(time > start & time < end) %>%
+      filter(time > (startPulse+endPulse)/2 & time < endPulse) %>%
       summarise(mean_pulse_delF = mean(delF))
-    data <- full_join(data,means)
+
+    data <- full_join(data, means)
+
     data %<>% unnest %>%
-      group_by(animal) %>%
+      group_by(animal, animal_num) %>%
       mutate(delF = delF - mean_pulse_delF) %>%
       nest()
   }
+
+  if(center_on_pulse %in% c(2,4)) {
+
+    means <- data %>% unnest %>%
+      group_by(animal) %>%
+      filter(time > startPulse/2 & time < startPulse) %>%
+      summarise(mean_pulse_delF = mean(delF))
+
+    # plot_order <- data %>%
+    #   unnest() %>%
+    #   group_by(animal, animal_num) %>%
+    #   summarise(maxD = max_delta(delF, end = startPulse)) %>%
+    #   arrange(maxD)
+
+    data <- full_join(data, means)
+
+    data %<>% unnest %>%
+      group_by(animal,animal_num) %>%
+      mutate(delF = delF - mean_pulse_delF) %>%
+      nest()
+  }
+
+  # arrange heat map settings
+  if(center_on_pulse %in% c(1,FALSE)) {
+    plot_order <- data %>%
+      unnest() %>%
+      group_by(animal, animal_num) %>%
+      summarise(maxD = max_delta(delF, end = endPulse)) %>%
+      arrange(maxD)
+
+    breaks = c(-.5,0,1.5)
+    labels = c("-.5", "0", "1.5")
+    limits = c(-0.5,1.5)
+  }
+
+  if(center_on_pulse == 2) {
+    plot_order <- data %>%
+      unnest() %>%
+      group_by(animal, animal_num) %>%
+      summarise(maxD = max_delta(delF, end = startPulse)) %>%
+      arrange(maxD)
+
+    breaks = c(-.5,0,1.5)
+    labels = c("-.5", "0", "1.5")
+    limits = c(-0.5,1.5)
+  }
+
+  if(center_on_pulse == 3) {
+    plot_order <- data %>%
+      unnest() %>%
+      group_by(animal, animal_num) %>%
+      summarise(maxD = max_negdelta(delF, end = endPulse)) %>%
+      arrange(maxD)
+
+    breaks = c(-1.5,0,0.5)
+    labels = c("-1.5", "0", "0.5")
+    limits = c(-1.5,0.5)
+  }
+
+  if(center_on_pulse == 4) {
+    plot_order <- data %>%
+      unnest() %>%
+      group_by(animal, animal_num) %>%
+      summarise(maxD = max_negdelta(delF, end = startPulse)) %>%
+      arrange(maxD)
+
+    breaks = c(-1.5,0,0.5)
+    labels = c("-1.5", "0", "0.5")
+    limits = c(-1.5,0.5)
+  }
+
 
   plot1 <- data %>% unnest() %>%
     ggplot(aes(x = time, y = delF)) +
     geom_line(aes(group = animal), alpha = 0.2) +
     geom_smooth(method = "loess", span = 0.05) +
     theme_classic() +
-    geom_segment(aes(x = !!start,
+    geom_segment(aes(x = !!startPulse,
                      y = max(delF) + 0.1*max(delF),
-                     xend = !!end,
+                     xend = !!endPulse,
                      yend =max(delF) + 0.1*max(delF))) +
     annotate(geom = "text",
              label = cue,
              y = max(unnest(data)$delF) + 0.2*max(unnest(data)$delF),
-             x = (start + end)/2,
+             x = (startPulse + endPulse)/2,
              size = 10) +
     annotate(geom = "text",
              label = genotype,
@@ -85,48 +164,18 @@ plotGCaMP_multi <- function(FileFilter,
              size = 10) +
     theme(axis.text = element_text(size = 14))
 
-if(center_on_pulse == 1) {
-  plot2 <- data %>%
+  plot2 <-  full_join(data, plot_order) %>%
     unnest() %>%
     group_by(animal_num) %>%
-    ggplot(aes(x = time, y = fct_reorder(factor(animal_num), delF, max_delta))) +
+    ggplot(aes(x = time, y = fct_reorder(animal_num, maxD))) +
     geom_tile(aes(fill = delF)) +
     scale_fill_viridis_c(option = "magma",
-                         breaks = c(-.5,0,1.5),
-                         labels = c("-.5", "0", "1.5"),
-                         limits = c(-1,1),
+                         breaks = breaks,
+                         labels = labels,
+                         limits = limits,
                          oob =squish) +
     theme_classic() +
     theme(axis.text = element_text(size = 14))
-} else {
-  if(center_on_pulse == 2) {
-  plot2 <- data %>%
-    unnest() %>%
-    group_by(animal_num) %>%
-    ggplot(aes(x = time, y = fct_reorder(factor(animal_num), delF, max_negdelta))) +
-    geom_tile(aes(fill = delF)) +
-    scale_fill_viridis_c(option = "magma",
-                         breaks = c(-1,0,1),
-                         labels = c("-1.5", "0", ".5"),
-                         limits = c(-1,1),
-                         oob =squish) +
-    theme_classic() +
-    theme(axis.text = element_text(size = 14))
-  } else {
-  plot2 <- data %>%
-    unnest() %>%
-    group_by(animal_num) %>%
-    ggplot(aes(x = time, y = fct_reorder(factor(animal_num), delF, max_delta))) +
-    geom_tile(aes(fill = delF)) +
-    scale_fill_viridis_c(option = "magma",
-                         breaks = c(-.5,0,1.5),
-                         labels = c("-.5", "0.0", "1.5+"),
-                         limits = c(-.5,1.5),
-                         oob =squish) +
-    theme_classic() +
-    theme(axis.text = element_text(size = 14))
-  }
-}
 
   plots <- plot1 + plot2 + plot_layout(ncol = 1, heights = c(2,1))
 

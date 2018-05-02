@@ -4,8 +4,8 @@
 \alias{plotGCaMP_multi}
 \title{plotGCaMP_multi}
 \usage{
-plotGCaMP_multi(FileFilter, genotype, cue = cue, food = OP50, start = 30,
-  end = 60, center_on_pulse = FALSE, ...)
+plotGCaMP_multi(FileFilter, genotype, cue = cue, food = OP50,
+  startPulse = 30, endPulse = 60, center_on_pulse = FALSE, ...)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
@@ -16,16 +16,20 @@ plotGCaMP_multi(FileFilter, genotype, cue = cue, food = OP50, start = 30,
 
 \item{food}{label to food cue}
 
-\item{start}{begin of stimulus}
+\item{startPulse}{begin of stimulus}
 
-\item{end}{end time of stimulus}
+\item{endPulse}{endPulse time of stimulus}
 
-\item{center_on_pulse}{optional parameter to center delF values by the mean of the stimulus duration}
+\item{center_on_pulse}{optional parameter to center delF values by the mean of the stimulus duration
+1 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of increase)
+2 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of increase)
+3 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of decrease)
+4 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of decrease)}
 }
 \description{
 Function is a wrapper for exp.fit.all.log.lin which outputs corrected GCaMP signals as well as plots showing
 original and corrected signals. Also plots average trace for GCaMP signal. Inputs are matfiles.
-The script searches recursively for matfiles from a starter file (can be any placeholder file). Need to exclude
+The script searches recursively for matfiles from a startPulseer file (can be any placeholder file). Need to exclude
 matfiles that are not GCaMP files either using FileFilter, or by putting only relevant files in the folder.
 Requires max_delta helper function
 time etc...
