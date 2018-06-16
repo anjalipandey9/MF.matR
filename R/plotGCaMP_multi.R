@@ -17,6 +17,9 @@
 #' 2 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of increase)
 #' 3 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of decrease)
 #' 4 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of decrease)
+#' 'OFF' = Bring values to mean delF of 2nd half pre-pulse duration, order by OFF responses
+#' 'ON' = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses
+#' @param neuron neuron being analyzed
 #'
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
@@ -30,6 +33,9 @@ plotGCaMP_multi <- function(FileFilter,
                             startPulse = 30,
                             endPulse = 60,
                             center_on_pulse = FALSE,
+                            show.plots = TRUE,
+                            use.Fmax = FALSE,
+                            neuron = GCAMP,
                             ...) {
   library(tidyverse)
   library(magrittr)
@@ -39,6 +45,8 @@ plotGCaMP_multi <- function(FileFilter,
   genotype <- quo_name(enquo(genotype))
   cue <- quo_name(enquo(cue))
   food <- quo_name(enquo(food))
+  neuron <- quo_name(enquo(neuron))
+  center_on_pulse <- quo_name(enquo(center_on_pulse))
 
   folderPath <- dirname(file.choose())
   files <- list.files(file.path(folderPath), pattern = "*.mat", recursive = TRUE)
@@ -47,16 +55,17 @@ plotGCaMP_multi <- function(FileFilter,
   files <- file.path(folderPath, files)
   #df <- data.frame(x = 1, genotype = genotype, cue = cue)
 
-  data <- map(files, ~ exp.fit.all.log.lin(filename = ., skip.time = 10))
+  data <- map(files, ~ exp.fit.all.log.lin(filename = ., skip.time = 10, show.plots = show.plots))
   data %<>% data_frame(data = .,
                       animal = filenames,
                       animal_num = factor(seq(from = 1, to = length(filenames))),
                       genotype = genotype,
                       cue = cue,
-                      food = food)
+                      food = food,
+                      neuron = neuron)
 
   # recenter mean values
-  if(center_on_pulse %in% c(1,3)) {
+  if(center_on_pulse == "OFF") {
 
     means <- data %>% unnest %>%
       group_by(animal) %>%
@@ -71,18 +80,12 @@ plotGCaMP_multi <- function(FileFilter,
       nest()
   }
 
-  if(center_on_pulse %in% c(2,4)) {
+  if(center_on_pulse == "ON") {
 
     means <- data %>% unnest %>%
       group_by(animal) %>%
       filter(time > startPulse/2 & time < startPulse) %>%
       summarise(mean_pulse_delF = mean(delF))
-
-    # plot_order <- data %>%
-    #   unnest() %>%
-    #   group_by(animal, animal_num) %>%
-    #   summarise(maxD = max_delta(delF, end = startPulse)) %>%
-    #   arrange(maxD)
 
     data <- full_join(data, means)
 
@@ -93,7 +96,7 @@ plotGCaMP_multi <- function(FileFilter,
   }
 
   # arrange heat map settings
-  if(center_on_pulse %in% c(1,FALSE)) {
+  if(center_on_pulse == "OFF") {
     plot_order <- data %>%
       unnest() %>%
       group_by(animal, animal_num) %>%
@@ -105,7 +108,7 @@ plotGCaMP_multi <- function(FileFilter,
     limits = c(-0.5,1.5)
   }
 
-  if(center_on_pulse == 2) {
+  if(center_on_pulse %in% c("ON", FALSE)) {
     plot_order <- data %>%
       unnest() %>%
       group_by(animal, animal_num) %>%
@@ -117,52 +120,49 @@ plotGCaMP_multi <- function(FileFilter,
     limits = c(-0.5,1.5)
   }
 
-  if(center_on_pulse == 3) {
-    plot_order <- data %>%
-      unnest() %>%
-      group_by(animal, animal_num) %>%
-      summarise(maxD = max_negdelta(delF, end = endPulse)) %>%
-      arrange(maxD)
+  if(use.Fmax == TRUE) {
+    range <- data %>% unnest %>%
+      group_by(animal) %>%
+      summarise(max_delF = max(delF), Fo = quantile(delF, 0.05))
 
-    breaks = c(-1.5,0,0.5)
-    labels = c("-1.5", "0", "0.5")
-    limits = c(-1.5,0.5)
-  }
+    data <- full_join(data, range)
 
-  if(center_on_pulse == 4) {
-    plot_order <- data %>%
-      unnest() %>%
-      group_by(animal, animal_num) %>%
-      summarise(maxD = max_negdelta(delF, end = startPulse)) %>%
-      arrange(maxD)
+    data %<>% unnest %>%
+      group_by(animal,animal_num) %>%
+      mutate(delF = (delF - Fo) / (max_delF - Fo)) %>%
+      nest()
 
-    breaks = c(-1.5,0,0.5)
-    labels = c("-1.5", "0", "0.5")
-    limits = c(-1.5,0.5)
+    breaks = c(0,0.5,1)
+    labels = c("0", "0.5", "1")
+    limits = c(0,1)
+
   }
 
 
   plot1 <- data %>% unnest() %>%
     ggplot(aes(x = time, y = delF)) +
-    geom_line(aes(group = animal), alpha = 0.2) +
+    geom_line(aes(group = animal), alpha = 0.1) +
     geom_smooth(method = "loess", span = 0.05) +
     theme_classic() +
     geom_segment(aes(x = !!startPulse,
-                     y = max(delF) + 0.1*max(delF),
+                     y = limits[2],
                      xend = !!endPulse,
-                     yend =max(delF) + 0.1*max(delF))) +
+                     yend = limits[2])) +
     annotate(geom = "text",
              label = cue,
-             y = max(unnest(data)$delF) + 0.2*max(unnest(data)$delF),
+             y = limits[2] + 0.2,
              x = (startPulse + endPulse)/2,
-             size = 10) +
+             size = 8) +
     annotate(geom = "text",
              label = genotype,
-             y = max(unnest(data)$delF) + 0.2*max(unnest(data)$delF),
+             y = limits[2] + 0.2,
              x = 10,
              fontface = "italic",
-             size = 10) +
-    theme(axis.text = element_text(size = 14))
+             size = 8) +
+    coord_cartesian(ylim = c(limits[1], limits[2]+0.5)) +
+    theme(axis.text = element_text(size = 16),
+          axis.title = element_text(size = 18),
+          axis.title.x = element_blank())
 
   plot2 <-  full_join(data, plot_order) %>%
     unnest() %>%
@@ -175,12 +175,20 @@ plotGCaMP_multi <- function(FileFilter,
                          limits = limits,
                          oob =squish) +
     theme_classic() +
-    theme(axis.text = element_text(size = 14))
+    theme(axis.text = element_text(size = 16),
+          axis.title = element_text(size = 18),
+          axis.text.y = element_blank()) +
+    labs(y = "Animal number")
 
   plots <- plot1 + plot2 + plot_layout(ncol = 1, heights = c(2,1))
 
-  ggsave(plots, filename = file.path(folderPath,paste0(genotype,"_",cue,"plots.png")),
-         width = 11, height = 8.5, units = "in")
+  if(use.Fmax == TRUE) {
+    ggsave(plots, filename = file.path(folderPath,paste0(genotype,"_",cue,neuron,"_delFmaxplots.png")),
+           width = 11, height = 8.5, units = "in")
+  } else {
+    ggsave(plots, filename = file.path(folderPath,paste0(genotype,"_",cue,neuron,"_plots.png")),
+           width = 11, height = 8.5, units = "in")
+  }
 
-  return(list(data = data, plot = plots))
+  return(list(data = dplyr::full_join(data, plot_order), plot = plots))
 }

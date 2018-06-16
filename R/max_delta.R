@@ -8,11 +8,27 @@
 #' @examples ggplot(aes(x = time, y = fct_reorder(animal_num, delF, max_delta)))
 
 max_delta <- function(x, end = 60) {
-  if(max(x[(end*4 - 10):(end*4 + 20)]) > 0) {
-      max(x[(end*4 - 10):(end*4 + 20)]) -
-        min(x[(end*4 - 10):(end*4 + 20)])
+
+  # if(max(x[(end*4 - 10):(end*4 + 20)]) > 0) {
+  #     max(x[(end*4 - 10):(end*4 + 20)]) -
+  #       min(x[(end*4 - 10):(end*4 + 20)])
+  # } else {
+  #     max(x[(end*4 - 10):(end*4 + 20)]) +
+  #       min(x[(end*4 -10):(end*4 + 20)])
+  # }
+  #
+
+  # new version:
+  max <- max(x[(end*4):(end*4 + 20)]) - mean(x[(end*4 - 10):(end*4)])
+  min <- min(x[(end*4):(end*4 + 20)]) - mean(x[(end*4 - 10):(end*4)])
+  if(abs(max) > abs(min)) {
+    return(max)
   } else {
-      max(x[(end*4 - 10):(end*4 + 20)]) +
-        min(x[(end*4 -10):(end*4 + 20)])
+    return(min)
   }
+
 }
+
+
+
+

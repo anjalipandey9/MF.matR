@@ -5,7 +5,8 @@
 \title{plotGCaMP_multi}
 \usage{
 plotGCaMP_multi(FileFilter, genotype, cue = cue, food = OP50,
-  startPulse = 30, endPulse = 60, center_on_pulse = FALSE, ...)
+  startPulse = 30, endPulse = 60, center_on_pulse = FALSE,
+  show.plots = TRUE, use.Fmax = FALSE, neuron = GCAMP, ...)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
@@ -24,7 +25,11 @@ plotGCaMP_multi(FileFilter, genotype, cue = cue, food = OP50,
 1 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of increase)
 2 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of increase)
 3 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of decrease)
-4 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of decrease)}
+4 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of decrease)
+'OFF' = Bring values to mean delF of 2nd half pre-pulse duration, order by OFF responses
+'ON' = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses}
+
+\item{neuron}{neuron being analyzed}
 }
 \description{
 Function is a wrapper for exp.fit.all.log.lin which outputs corrected GCaMP signals as well as plots showing

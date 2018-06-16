@@ -4,7 +4,7 @@
 \alias{exp.fit.all.log.lin}
 \title{exp.fit.all.log.lin}
 \usage{
-\method{exp}{fit.all.log.lin}(filename, skip.time)
+\method{exp}{fit.all.log.lin}(filename, skip.time, show.plots = TRUE)
 }
 \arguments{
 \item{filename}{filepaths of .mat files which have a "signal"  and "time" field.}

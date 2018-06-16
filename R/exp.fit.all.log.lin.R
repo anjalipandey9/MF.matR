@@ -11,7 +11,9 @@
 #' @export
 #' @examples data <- exp.fit.all.log.lin(files[1], skip.time = 10)
 #'
-exp.fit.all.log.lin <- function(filename, skip.time) {
+exp.fit.all.log.lin <- function(filename,
+                                skip.time,
+                                show.plots = TRUE) {
   matfile <- R.matlab::readMat(filename, fixNames = TRUE)
   signal <- matfile$signal
   time <- (1:length(signal)) / 4
@@ -49,7 +51,11 @@ exp.fit.all.log.lin <- function(filename, skip.time) {
     geom_line(aes(y = corrected), colour = "blue") +
     annotate("text", label = animal_name, y = max(c(df$corrected,df$signal) + 0.1), x = 50) +
     theme_classic()
-  print(p)
+
+  if(show.plots) {
+    print(p)
+  }
+
   delF <- df$corrected
   time <- df$time
   return <- data.frame(delF, time)
