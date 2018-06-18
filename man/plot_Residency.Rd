@@ -4,7 +4,7 @@
 \alias{plot_Residency}
 \title{Plot residency from Wormlab dauer data by space and time.}
 \usage{
-plot_Residency(time_bin, y_bin, overlay, multiple)
+plot_Residency(time_bin, y_bin, overlay, multiple, stripe.index = FALSE, ...)
 }
 \arguments{
 \item{time_bin}{number of bins to split plot}

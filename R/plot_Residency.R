@@ -9,7 +9,7 @@
 #' plot_Residency(time_bin = 4, y_bin = 100, nopause = TRUE)
 #'
 
-plot_Residency <- function(time_bin, y_bin, overlay, multiple) {
+plot_Residency <- function(time_bin, y_bin, overlay, multiple, stripe.index = FALSE, ...) {
     # if(!suppressWarnings(
     #   suppressPackageStartupMessages(
     #     require(patchwork,

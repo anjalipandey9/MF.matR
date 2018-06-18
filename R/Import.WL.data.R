@@ -10,6 +10,7 @@
 #' Import.WL.data(bin.length = 2, frame.rate = 6)
 
 Import.WL.data <- function(bin.length, frame.rate, num.tracks, multiple, ...) {
+  library(tidyverse)
 
   #### import data ### - use  readr to improve speed
   if(missing(multiple)) {
@@ -36,7 +37,6 @@ Import.WL.data <- function(bin.length, frame.rate, num.tracks, multiple, ...) {
   length <- read.csv(length.path, skip=4)
   width <- read.csv(width.path, skip=4)
   state <- read.csv(omega.path, skip=4)
-
 
   ####Setting up parameters####
   if(missing(num.tracks)) {
@@ -88,7 +88,7 @@ Import.WL.data <- function(bin.length, frame.rate, num.tracks, multiple, ...) {
     tidyr::separate(variable, sep = "\\.", c("worm", "stuffer")) %>%
     dplyr::rename(state = value)
 
-  print(system.time(WL.alldata <- list(WL.centroid,
+print(system.time(WL.alldata <- list(WL.centroid,
                                        WL.speed,
                                        WL.move.dir,
                                        WL.length,
@@ -126,23 +126,26 @@ WL.alldata <- WL.alldata %>%
                                                                TRUE ~ 0))
 
 # using rle(), get length of runs in each direction, then get max in REVERSE direction
-backwards <- WL.alldata %>%
+
+backwards <- purrr::possibly(WL.alldata %>%
   dplyr::group_by(worm) %>%
-  dplyr::do({tmp <- cbind(with(rle(.$run.dir==-1), lengths[values]))
-  data.frame(worm= .$worm, Max.back=if(length(tmp)==0) 0
-             else max(tmp)) }) %>% dplyr::slice(1L)
+  dplyr::do({
+    tmp <- cbind(with(rle(.$run.dir==-1), lengths[values]))
+    data.frame(worm= .$worm, Max.back=if(length(tmp)==0) 0
+             else max(tmp)) }) %>%
+  dplyr::slice(1L))
 
 # using rle(), get length of runs in each direction, then get max in FORWARD direction
-forward <- WL.alldata %>%
+forward <- purrr::possibly(WL.alldata %>%
   dplyr::group_by(worm) %>%
   dplyr::do({tmp <- cbind(with(rle(.$run.dir==1), lengths[values]))
   data.frame(worm= .$worm, Max.for=if(length(tmp)==0) 0
              else max(tmp)) }) %>%
-  dplyr::slice(1L)
+  dplyr::slice(1L))
 
 max_runs <- dplyr::full_join(backwards,forward)
 
-# switch direction of worms that have longer runs in reverse than forward
+# # switch direction of worms that have longer runs in reverse than forward
 WL.alldata <- WL.alldata %>%
   dplyr::mutate(
     speed = dplyr::case_when(
@@ -175,7 +178,7 @@ WL.alldata <- WL.alldata %>%
         (move.dir %% 360) %% 360 < 205 ~ "left",
       TRUE ~ "right"
     ))
-#
+
 
 message("adding behavioral states")
 
