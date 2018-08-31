@@ -13,7 +13,7 @@
 }
 \description{
 Function takes a list of calcium imaging files by filenames in the current working directory (.mat files)
-and performs an exponential fit to normalize the deltaF/F signal. This function incorporates a linear
+and performs a simple exponential regression fit to normalize the deltaF/F signal. This function incorporates a linear
 to account for gradual rise in signal, which can alter the single exponential. Will output plots showing orignal
 and fitted values, as well as corrected values. If an object is assigned, this will be a vector of corrected values
 }

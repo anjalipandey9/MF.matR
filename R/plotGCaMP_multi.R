@@ -3,7 +3,8 @@
 #' Function is a wrapper for exp.fit.all.log.lin which outputs corrected GCaMP signals as well as plots showing
 #' original and corrected signals. Also plots average trace for GCaMP signal. Inputs are matfiles.
 #' The script searches recursively for matfiles from a startPulseer file (can be any placeholder file). Need to exclude
-#' matfiles that are not GCaMP files either using FileFilter, or by putting only relevant files in the folder.
+#' matfiles that are not GCaMP files either using FileFilter, or by putting only relevant files in the folder. Default
+#' startpulse assumes 400ms delay for camera recording.
 #' Requires max_delta helper function
 #' time etc...
 #' @param FileFilter string to search/subset filenames
@@ -30,8 +31,8 @@ plotGCaMP_multi <- function(FileFilter,
                             genotype,
                             cue = cue,
                             food = OP50,
-                            startPulse = 30,
-                            endPulse = 60,
+                            startPulse = 29.5,
+                            endPulse = 59.5,
                             center_on_pulse = FALSE,
                             show.plots = TRUE,
                             use.Fmax = FALSE,
