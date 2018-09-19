@@ -71,14 +71,12 @@ plotGCaMP_multi <- function(FileFilter,
     neuronfilenames <- neuronfiles
 
     neuronfiles <- file.path(folderPath, neuronfiles)
-    backgroundfiles <- list.files(file.path(folderPath), pattern = "*background_results.csv", recursive = TRUE)
-    backgroundfiles <- neuronfiles[stringr::str_detect(backgroundfiles, pattern = paste0(FileFilter))]
-    backgroundfiles <- file.path(folderPath, backgroundfiles)
+    # backgroundfiles <- list.files(file.path(folderPath), pattern = "*background_results.csv", recursive = TRUE)
+    # backgroundfiles <- neuronfiles[stringr::str_detect(backgroundfiles, pattern = paste0(FileFilter))]
+    # backgroundfiles <- file.path(folderPath, backgroundfiles)
 
-    purrr::map2(.x = neuronfiles,
-                .y = backgroundfiles,
-                ~ merge_FIJI_data,
-                show.plots = show.plots)
+    purrr::map(neuronfiles,
+                ~ merge_FIJI_data(neuronfile = ., show.plots = show.plots))
 
     files <- list.files(file.path(folderPath), pattern = "*ImageJ_data.csv", recursive = TRUE)
     files <- files[stringr::str_detect(files, pattern = paste0(FileFilter))]

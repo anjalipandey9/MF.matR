@@ -7,9 +7,13 @@
 #'
 #' @param filename
 #'
-merge_FIJI_data <- function(neuronfile, backgroundfile, show.plots = TRUE, frame.rate = 4) {
+merge_FIJI_data <- function(neuronfile, show.plots = TRUE, frame.rate = 4) {
   neuron <- read.csv(neuronfile) %>% dplyr::select(animal = Label, MeanGCaMP = Mean, Slice)
-  background <- read.csv(backgroundfile) %>% dplyr::select(animal = Label, MeanBackground = Mean, Slice)
+  neuron_prefix <- strsplit(neuronfile,
+                            split = "neuron_results.csv")
+  background <- read.csv(paste0(neuron_prefix,
+                                "background_results.csv")) %>%
+    dplyr::select(animal = Label, MeanBackground = Mean, Slice)
 
   data <- dplyr::full_join(neuron, background) %>%
     separate(animal, "animal", sep = ":") %>%
@@ -49,5 +53,5 @@ merge_FIJI_data <- function(neuronfile, backgroundfile, show.plots = TRUE, frame
     print(p1 + p2 + patchwork::plot_layout(nrow = 2))
   }
 
-  readr::write_csv(data,path = file.path(dirname(neuronfile),"ImageJ_data.csv"))
+  readr::write_csv(data, path = paste0(neuron_prefix,"ImageJ_data.csv"))
 }
