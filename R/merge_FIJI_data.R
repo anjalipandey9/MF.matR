@@ -7,7 +7,7 @@
 #'
 #' @param filename
 #'
-merge_FIJI_data <- function(neuronfile, backgroundfile) {
+merge_FIJI_data <- function(neuronfile, backgroundfile, show.plots = TRUE, frame.rate = 4) {
   neuron <- read.csv(neuronfile) %>% dplyr::select(animal = Label, MeanGCaMP = Mean, Slice)
   background <- read.csv(backgroundfile) %>% dplyr::select(animal = Label, MeanBackground = Mean, Slice)
 
@@ -15,5 +15,39 @@ merge_FIJI_data <- function(neuronfile, backgroundfile) {
     separate(animal, "animal", sep = ":") %>%
     mutate(Fluor = MeanGCaMP - MeanBackground,
            Fnaut = mean(Fluor[1:20]),
-           signal = (Fluor - Fnaut) / Fnaut)
+           signal = (Fluor - Fnaut) / Fnaut,
+           time = Slice/frame.rate)
+
+  if(show.plots) {
+    library(patchwork)
+    library(ggrepel)
+    p1 <- data %>% ggplot(aes(x = time, y = signal)) +
+      geom_line() +
+      labs(y = "deltaF/F")
+    p2 <- ggplot(data, aes(x = time)) +
+      geom_line(aes(y = MeanBackground), colour = "red") +
+      # geom_text(data = subset(data, time == max(data$time)),
+      #           aes(x = max(data$time), y = MeanBackground), hjust = -.1,
+      #           label = "background", colour = "red") +
+      geom_label_repel(data = subset(data, time == max(data$time)),
+                       label = "background",
+                       aes(x = max(data$time),
+                           y = MeanBackground),
+                       colour = "red",
+                       nudge_y = 100,
+                       na.rm = TRUE) +
+      geom_line(aes(y = MeanGCaMP), colour = "green") +
+      geom_label_repel(data = subset(data, time == max(data$time)),
+                       label = "GCaMP",
+                       aes(x = max(data$time),
+                           y = MeanGCaMP),
+                       colour = "green",
+                       nudge_y = 100,
+                       na.rm = TRUE) +
+      labs(y = "mean pixel intensity")
+
+    print(p1 + p2 + patchwork::plot_layout(nrow = 2))
+  }
+
+  readr::write_csv(data,path = file.path(dirname(neuronfile),"ImageJ_data.csv"))
 }

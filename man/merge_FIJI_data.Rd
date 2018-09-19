@@ -4,7 +4,8 @@
 \alias{merge_FIJI_data}
 \title{merge_FIJI_data}
 \usage{
-merge_FIJI_data(neuronfile, backgroundfile)
+merge_FIJI_data(neuronfile, backgroundfile, show.plots = TRUE,
+  frame.rate = 4)
 }
 \arguments{
 \item{filename}{}

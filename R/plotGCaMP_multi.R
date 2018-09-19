@@ -8,11 +8,13 @@
 #' Requires max_delta helper function
 #' time etc...
 #' @param FileFilter string to search/subset filenames
+#' @param matlab whether to use matfiles or data from ImageJ quantification. Defaults to TRUE (matfiles)
 #' @param genotype label the genotype for these data
 #' @param cue label the stimulus cue.
 #' @param food label to food cue
 #' @param startPulse begin of stimulus
 #' @param endPulse endPulse time of stimulus
+#' @param linear optional argument piped into exp.fit.all.log.lin include a linear term in the fit?
 #' @param center_on_pulse optional parameter to center delF values by the mean of the stimulus duration
 #' 1 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of increase)
 #' 2 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of increase)
@@ -28,7 +30,7 @@
 #' @examples data <- plotGCaMP_multi(N2, genotype = N2, cue = octanol)
 #'
 plotGCaMP_multi <- function(FileFilter,
-                            matfile = TRUE,
+                            matlab = TRUE,
                             genotype,
                             cue = cue,
                             food = OP50,
@@ -38,6 +40,7 @@ plotGCaMP_multi <- function(FileFilter,
                             show.plots = TRUE,
                             use.Fmax = FALSE,
                             neuron = GCAMP,
+                            linear = FALSE,
                             ...) {
   library(tidyverse)
   library(magrittr)
@@ -51,8 +54,9 @@ plotGCaMP_multi <- function(FileFilter,
   center_on_pulse <- quo_name(enquo(center_on_pulse))
 
   folderPath <- dirname(file.choose())
+  print(folderPath)
 
-  if(matfile) {
+  if(matlab == TRUE) {
     files <- list.files(file.path(folderPath), pattern = "*.mat", recursive = TRUE)
     files <- files[stringr::str_detect(files, pattern = paste0(FileFilter))]
     filenames <- files
@@ -60,26 +64,43 @@ plotGCaMP_multi <- function(FileFilter,
     #df <- data.frame(x = 1, genotype = genotype, cue = cue)
 
     data <- map(files, ~ exp.fit.all.log.lin(filename = ., skip.time = 10, show.plots = show.plots))
-    data %<>% data_frame(data = .,
+
+  } else {
+    neuronfiles <- list.files(file.path(folderPath), pattern = "*neuron_results.csv", recursive = TRUE)
+    neuronfiles <- neuronfiles[stringr::str_detect(neuronfiles, pattern = paste0(FileFilter))]
+    neuronfilenames <- neuronfiles
+
+    neuronfiles <- file.path(folderPath, neuronfiles)
+    backgroundfiles <- list.files(file.path(folderPath), pattern = "*background_results.csv", recursive = TRUE)
+    backgroundfiles <- neuronfiles[stringr::str_detect(backgroundfiles, pattern = paste0(FileFilter))]
+    backgroundfiles <- file.path(folderPath, backgroundfiles)
+
+    purrr::map2(.x = neuronfiles,
+                .y = backgroundfiles,
+                ~ merge_FIJI_data,
+                show.plots = show.plots)
+
+    files <- list.files(file.path(folderPath), pattern = "*ImageJ_data.csv", recursive = TRUE)
+    files <- files[stringr::str_detect(files, pattern = paste0(FileFilter))]
+    filenames <- files
+    files <- file.path(folderPath, files)
+    #df <- data.frame(x = 1, genotype = genotype, cue = cue)
+
+    data <- map(files, ~ exp.fit.all.log.lin(filename = .,
+                                             skip.time = 10,
+                                             show.plots = show.plots,
+                                             matlab = FALSE,
+                                             linear = linear))
+  }
+
+
+  data %<>% data_frame(data = .,
                        animal = filenames,
                        animal_num = factor(seq(from = 1, to = length(filenames))),
                        genotype = genotype,
                        cue = cue,
                        food = food,
                        neuron = neuron)
-  } else {
-    # neuronfiles <- list.files(file.path(folderPath), pattern = "*neuron_results.csv", recursive = TRUE)
-    # neuronfiles <- files[stringr::str_detect(neuronfiles, pattern = paste0(FileFilter))]
-    # neuronfilenames <- neuronfiles
-    #
-    # neuronfiles <- file.path(folderPath, neuronfiles)
-    # backgroundfiles <- list.files(file.path(folderPath), pattern = "*background_results.csv", recursive = TRUE)
-    # backgroundfiles <- files[stringr::str_detect(backgroundfiles, pattern = paste0(FileFilter))]
-    # backgroundfiles <- file.path(folderPath, backgroundfiles)
-    #
-    # purrr::map2(neuronfiles, backgroundfiles, ~ )
-  }
-
 
 
   # recenter mean values

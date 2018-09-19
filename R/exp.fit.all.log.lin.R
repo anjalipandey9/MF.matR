@@ -13,23 +13,37 @@
 #'
 exp.fit.all.log.lin <- function(filename,
                                 skip.time,
-                                show.plots = TRUE) {
-  matfile <- R.matlab::readMat(filename, fixNames = TRUE)
-  signal <- matfile$signal
-  time <- (1:length(signal)) / 4
-  df <- data.frame(time, signal)
-  rm(signal)
-  rm(time)
+                                matlab = TRUE,
+                                show.plots = TRUE,
+                                linear = TRUE) {
+  if(matlab == TRUE) {
+    matfile <- R.matlab::readMat(filename, fixNames = TRUE)
+    signal <- matfile$signal
+    time <- (1:length(signal)) / 4
+    df <- data.frame(time, signal)
+    rm(signal)
+    rm(time)
+  } else {
+    df <- read.csv(filename) %>% dplyr::select(signal, time)
+  }
+
 
   animal_name <- basename(filename)
     #quo_name(enquo(filename))
 
   # fit to first N(skip.time) seconds to 30 sec
   #fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time) + time) # plus last 15s
-  fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time) + time) # plus last 15s
-  if(fit1$coefficients[2] > 0) {
+
+  if(linear == FALSE) {
     fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time))
+  } else {
+    fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time) + time) # plus last 15s
+
+    if(fit1$coefficients[2] > 0) {
+    fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time))
+    }
   }
+
 
 
   fitted <- predict(fit1, newdata = df)

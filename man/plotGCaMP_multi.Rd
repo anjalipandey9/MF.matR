@@ -4,13 +4,15 @@
 \alias{plotGCaMP_multi}
 \title{plotGCaMP_multi}
 \usage{
-plotGCaMP_multi(FileFilter, matfile = TRUE, genotype, cue = cue,
+plotGCaMP_multi(FileFilter, matlab = TRUE, genotype, cue = cue,
   food = OP50, startPulse = 29.5, endPulse = 59.5,
   center_on_pulse = FALSE, show.plots = TRUE, use.Fmax = FALSE,
-  neuron = GCAMP, ...)
+  neuron = GCAMP, linear = FALSE, ...)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
+
+\item{matlab}{whether to use matfiles or data from ImageJ quantification. Defaults to TRUE (matfiles)}
 
 \item{genotype}{label the genotype for these data}
 
@@ -31,6 +33,8 @@ plotGCaMP_multi(FileFilter, matfile = TRUE, genotype, cue = cue,
 'ON' = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses}
 
 \item{neuron}{neuron being analyzed}
+
+\item{linear}{optional argument piped into exp.fit.all.log.lin include a linear term in the fit?}
 }
 \description{
 Function is a wrapper for exp.fit.all.log.lin which outputs corrected GCaMP signals as well as plots showing
