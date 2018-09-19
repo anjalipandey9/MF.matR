@@ -4,9 +4,10 @@
 \alias{plotGCaMP_multi}
 \title{plotGCaMP_multi}
 \usage{
-plotGCaMP_multi(FileFilter, genotype, cue = cue, food = OP50,
-  startPulse = 29.5, endPulse = 59.5, center_on_pulse = FALSE,
-  show.plots = TRUE, use.Fmax = FALSE, neuron = GCAMP, ...)
+plotGCaMP_multi(FileFilter, matfile = TRUE, genotype, cue = cue,
+  food = OP50, startPulse = 29.5, endPulse = 59.5,
+  center_on_pulse = FALSE, show.plots = TRUE, use.Fmax = FALSE,
+  neuron = GCAMP, ...)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}

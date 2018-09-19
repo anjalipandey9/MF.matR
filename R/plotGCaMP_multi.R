@@ -28,6 +28,7 @@
 #' @examples data <- plotGCaMP_multi(N2, genotype = N2, cue = octanol)
 #'
 plotGCaMP_multi <- function(FileFilter,
+                            matfile = TRUE,
                             genotype,
                             cue = cue,
                             food = OP50,
@@ -50,20 +51,36 @@ plotGCaMP_multi <- function(FileFilter,
   center_on_pulse <- quo_name(enquo(center_on_pulse))
 
   folderPath <- dirname(file.choose())
-  files <- list.files(file.path(folderPath), pattern = "*.mat", recursive = TRUE)
-  files <- files[stringr::str_detect(files, pattern = paste0(FileFilter))]
-  filenames <- files
-  files <- file.path(folderPath, files)
-  #df <- data.frame(x = 1, genotype = genotype, cue = cue)
 
-  data <- map(files, ~ exp.fit.all.log.lin(filename = ., skip.time = 10, show.plots = show.plots))
-  data %<>% data_frame(data = .,
-                      animal = filenames,
-                      animal_num = factor(seq(from = 1, to = length(filenames))),
-                      genotype = genotype,
-                      cue = cue,
-                      food = food,
-                      neuron = neuron)
+  if(matfile) {
+    files <- list.files(file.path(folderPath), pattern = "*.mat", recursive = TRUE)
+    files <- files[stringr::str_detect(files, pattern = paste0(FileFilter))]
+    filenames <- files
+    files <- file.path(folderPath, files)
+    #df <- data.frame(x = 1, genotype = genotype, cue = cue)
+
+    data <- map(files, ~ exp.fit.all.log.lin(filename = ., skip.time = 10, show.plots = show.plots))
+    data %<>% data_frame(data = .,
+                       animal = filenames,
+                       animal_num = factor(seq(from = 1, to = length(filenames))),
+                       genotype = genotype,
+                       cue = cue,
+                       food = food,
+                       neuron = neuron)
+  } else {
+    # neuronfiles <- list.files(file.path(folderPath), pattern = "*neuron_results.csv", recursive = TRUE)
+    # neuronfiles <- files[stringr::str_detect(neuronfiles, pattern = paste0(FileFilter))]
+    # neuronfilenames <- neuronfiles
+    #
+    # neuronfiles <- file.path(folderPath, neuronfiles)
+    # backgroundfiles <- list.files(file.path(folderPath), pattern = "*background_results.csv", recursive = TRUE)
+    # backgroundfiles <- files[stringr::str_detect(backgroundfiles, pattern = paste0(FileFilter))]
+    # backgroundfiles <- file.path(folderPath, backgroundfiles)
+    #
+    # purrr::map2(neuronfiles, backgroundfiles, ~ )
+  }
+
+
 
   # recenter mean values
   if(center_on_pulse == "OFF") {
