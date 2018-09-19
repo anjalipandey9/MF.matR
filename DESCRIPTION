@@ -17,7 +17,8 @@ Imports:
     viridis,
     tidyr,
     patchwork,
-    scales
+    scales,
+    readr
 Remotes:
     thomasp85/patchwork
 License: What license is it under?
