@@ -6,6 +6,7 @@
 #' and fitted values, as well as corrected values. If an object is assigned, this will be a vector of corrected values
 #' @param filename filepaths of .mat files which have a "signal"  and "time" field.
 #' @param skip.time number of seconds to skip at the beginning for the exponential fit. N=10 improves the fit.
+#' @param nls use nls to perform exponential fit
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
 #' @export
@@ -15,7 +16,10 @@ exp.fit.all.log.lin <- function(filename,
                                 skip.time,
                                 matlab = TRUE,
                                 show.plots = TRUE,
-                                linear = TRUE) {
+                                linear = TRUE,
+                                nls = FALSE,
+                                startPulse = 29.5,
+                                endPulse = 60.5) {
   if(matlab == TRUE) {
     matfile <- R.matlab::readMat(filename, fixNames = TRUE)
     signal <- matfile$signal
@@ -31,18 +35,24 @@ exp.fit.all.log.lin <- function(filename,
   animal_name <- basename(filename)
     #quo_name(enquo(filename))
 
-  # fit to first N(skip.time) seconds to 30 sec
-  #fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time) + time) # plus last 15s
+  # fit to first N(skip.time) seconds to 30 sec for log-linear fit
+  # if using nls, fit only to pre and post-stimulus
 
-  if(linear == FALSE) {
-    fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time))
-  } else {
-    fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time) + time) # plus last 15s
-
-    if(fit1$coefficients[2] > 0) {
-    fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time))
+  if(nls == FALSE) {
+    if(linear == FALSE) {
+      fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time))
+    } else {
+      fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time) + time) # plus last 15s
+      if(fit1$coefficients[2] > 0) {
+        fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time))
+      }
     }
-  }
+
+  } else {
+      fit1 <- nls(signal ~ y0 + exp((-time) / tau),
+                          data = filter(df, time < startPulse | time > (endPulse + 10)),
+                          start = list(y0 = 0,tau = 0.1))
+    }
 
 
 
@@ -51,12 +61,18 @@ exp.fit.all.log.lin <- function(filename,
   df$fitted <- fitted
   # }
 
-  # correct after fitted values go below zero (~ 20s) could do this in function
-  df %<>% mutate(corrected = case_when(
-    fit1$coefficients[2] > 0 ~ signal, #ignore inverted exp fit
-    fitted > 0 ~ signal, #ignor cases which have linear fit > 0
-    TRUE ~ signal - fitted
-  ))
+  # for linear fit,
+  # correct after fitted values go below zero (~ 20s)
+  if(nls == FALSE) {
+    df %<>% mutate(corrected = case_when(
+      fit1$coefficients[2] > 0 ~ signal, #ignore inverted exp fit
+      fitted > 0 ~ signal, #ignore cases which have linear fit > 0
+      TRUE ~ signal - fitted
+    ))
+  } else {
+    df %<>% mutate(corrected = signal - fitted)
+  }
+
 
   # plot fits to inspect
   p <- ggplot(df, aes(x = time, y = signal)) +

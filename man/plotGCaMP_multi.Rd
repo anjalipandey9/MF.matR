@@ -7,7 +7,7 @@
 plotGCaMP_multi(FileFilter, matlab = TRUE, genotype, cue = cue,
   food = OP50, startPulse = 29.5, endPulse = 59.5,
   center_on_pulse = FALSE, show.plots = TRUE, use.Fmax = FALSE,
-  neuron = GCAMP, linear = FALSE, ...)
+  neuron = GCAMP, linear = FALSE, nls = TRUE, ...)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
@@ -31,6 +31,10 @@ plotGCaMP_multi(FileFilter, matlab = TRUE, genotype, cue = cue,
 4 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of decrease)
 'OFF' = Bring values to mean delF of 2nd half pre-pulse duration, order by OFF responses
 'ON' = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses}
+
+\item{show.plots}{render plots for baseline correction - defaults to TRUE}
+
+\item{use.Fmax}{normalize amplitude to 1}
 
 \item{neuron}{neuron being analyzed}
 

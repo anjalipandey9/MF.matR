@@ -16,7 +16,8 @@ merge_FIJI_data <- function(neuronfile, show.plots = TRUE, frame.rate = 4) {
     dplyr::select(animal = Label, MeanBackground = Mean, Slice)
 
   data <- dplyr::full_join(neuron, background) %>%
-    separate(animal, "animal", sep = ":") %>%
+    separate(animal, c("animal", "section"), sep = ":") %>%
+    dplyr::select(animal, Slice, MeanGCaMP, MeanBackground) %>%
     mutate(Fluor = MeanGCaMP - MeanBackground,
            Fnaut = mean(Fluor[1:20]),
            signal = (Fluor - Fnaut) / Fnaut,
