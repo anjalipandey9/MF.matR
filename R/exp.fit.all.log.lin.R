@@ -6,7 +6,7 @@
 #' and fitted values, as well as corrected values. If an object is assigned, this will be a vector of corrected values
 #' @param filename filepaths of .mat files which have a "signal"  and "time" field.
 #' @param skip.time number of seconds to skip at the beginning for the exponential fit. N=10 improves the fit.
-#' @param nls use nls to perform exponential fit
+#' @param nls use nls to perform exponential fit: signal ~ y0 + exp((-time - T0) / tau)
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
 #' @export
@@ -49,9 +49,10 @@ exp.fit.all.log.lin <- function(filename,
     }
 
   } else {
-      fit1 <- nls(signal ~ y0 + exp((-time) / tau),
-                          data = filter(df, time < startPulse | time > (endPulse + 10)),
-                          start = list(y0 = 0,tau = 0.1))
+      fit1 <- nls(signal ~ y0 + exp((-time - T0) / tau),
+                  nls.control(maxiter = 1000),
+                  data = filter(df, time < startPulse | time > (endPulse + 10)),
+                  start = list(y0 = 0,tau = 0.1,T0 = 0.01))
     }
 
 

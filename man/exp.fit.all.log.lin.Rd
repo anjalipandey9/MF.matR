@@ -13,7 +13,7 @@
 
 \item{skip.time}{number of seconds to skip at the beginning for the exponential fit. N=10 improves the fit.}
 
-\item{nls}{use nls to perform exponential fit}
+\item{nls}{use nls to perform exponential fit: signal ~ y0 + exp((-time - T0) / tau)}
 }
 \description{
 Function takes a list of calcium imaging files by filenames in the current working directory (.mat files)
