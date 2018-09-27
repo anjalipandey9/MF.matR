@@ -28,7 +28,7 @@ exp.fit.all.log.lin <- function(filename,
     rm(signal)
     rm(time)
   } else {
-    df <- read.csv(filename) %>% dplyr::select(signal, time)
+    df <- read.csv(filename) %>% dplyr::select(signal, MeanGCaMP, time)
   }
 
 
@@ -41,26 +41,36 @@ exp.fit.all.log.lin <- function(filename,
   if(nls == FALSE) {
     if(linear == FALSE) {
       fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time))
+      correction <- "log"
     } else {
       fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time) + time) # plus last 15s
+      correction <- "log+linear"
       if(fit1$coefficients[2] > 0) {
         fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time))
+        correction <- "log"
       }
     }
 
   } else {
-      fit1 <- nls(signal ~ y0 + exp((-time - T0) / tau),
-                  nls.control(maxiter = 1000),
-                  data = filter(df, time < startPulse | time > (endPulse + 10)),
-                  start = list(y0 = 0,tau = 0.1,T0 = 0.01))
-    }
+      fit1 <- try(nls(signal ~ SSasymp(time, Asym, R0, lrc),
+                  data = dplyr::filter(df, time < 29 | time > (60 + 10))))
+      correction <- "nls"
+  }
 
-
-
+  #### get fitted values ####
+if (inherits(fit1, "try-error")) {
+  message("No exponential decay detected, using raw values for file:")
+  print(filename)
+  fitted <- 0
+  correction <- "raw"
+} else {
   fitted <- predict(fit1, newdata = df)
+}
 
-  df$fitted <- fitted
-  # }
+
+
+ df %<>% mutate(fitted = fitted,
+                correction = correction)
 
   # for linear fit,
   # correct after fitted values go below zero (~ 20s)
@@ -69,7 +79,7 @@ exp.fit.all.log.lin <- function(filename,
       fit1$coefficients[2] > 0 ~ signal, #ignore inverted exp fit
       fitted > 0 ~ signal, #ignore cases which have linear fit > 0
       TRUE ~ signal - fitted
-    ))
+      ))
   } else {
     df %<>% mutate(corrected = signal - fitted)
   }
@@ -86,8 +96,5 @@ exp.fit.all.log.lin <- function(filename,
   if(show.plots) {
     print(p)
   }
-
-  delF <- df$corrected
-  time <- df$time
-  return <- data.frame(delF, time)
+  return(df %>% rename(delF = corrected))
 }

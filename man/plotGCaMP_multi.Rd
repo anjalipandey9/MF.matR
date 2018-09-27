@@ -7,7 +7,8 @@
 plotGCaMP_multi(FileFilter, matlab = TRUE, genotype, cue = cue,
   food = OP50, startPulse = 29.5, endPulse = 59.5,
   center_on_pulse = FALSE, show.plots = TRUE, use.Fmax = FALSE,
-  neuron = GCAMP, linear = FALSE, nls = TRUE, ...)
+  neuron = GCAMP, linear = FALSE, nls = TRUE, backsub = TRUE,
+  heatmap_limits = "auto", ...)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}

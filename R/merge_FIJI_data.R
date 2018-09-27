@@ -7,7 +7,8 @@
 #'
 #' @param filename
 #'
-merge_FIJI_data <- function(neuronfile, show.plots = TRUE, frame.rate = 4) {
+merge_FIJI_data <- function(neuronfile, backsub = TRUE,
+                            show.plots = TRUE, frame.rate = 4) {
   neuron <- read.csv(neuronfile) %>% dplyr::select(animal = Label, MeanGCaMP = Mean, Slice)
   neuron_prefix <- strsplit(neuronfile,
                             split = "neuron_results.csv")
@@ -15,20 +16,32 @@ merge_FIJI_data <- function(neuronfile, show.plots = TRUE, frame.rate = 4) {
                                 "background_results.csv")) %>%
     dplyr::select(animal = Label, MeanBackground = Mean, Slice)
 
-  data <- dplyr::full_join(neuron, background) %>%
-    separate(animal, c("animal", "section"), sep = ":") %>%
-    dplyr::select(animal, Slice, MeanGCaMP, MeanBackground) %>%
-    mutate(Fluor = MeanGCaMP - MeanBackground,
-           Fnaut = mean(Fluor[1:20]),
-           signal = (Fluor - Fnaut) / Fnaut,
-           time = Slice/frame.rate)
+  if(backsub == TRUE) {
+    data <- dplyr::full_join(neuron, background) %>%
+      separate(animal, c("animal", "section"), sep = ":") %>%
+      dplyr::select(animal, Slice, MeanGCaMP, MeanBackground) %>%
+      mutate(Fluor = MeanGCaMP - MeanBackground,
+             Fnaut = mean(Fluor[1:20]),
+             signal = (Fluor - Fnaut) / Fnaut,
+             time = Slice/frame.rate)
+  } else {
+    data <- dplyr::full_join(neuron, background) %>%
+      separate(animal, c("animal", "section"), sep = ":") %>%
+      dplyr::select(animal, Slice, MeanGCaMP, MeanBackground) %>%
+      mutate(Fluor = MeanGCaMP,
+             Fnaut = mean(Fluor[1:20]),
+             signal = (Fluor - Fnaut) / Fnaut,
+             time = Slice/frame.rate)
+  }
+
 
   if(show.plots) {
     library(patchwork)
     library(ggrepel)
     p1 <- data %>% ggplot(aes(x = time, y = signal)) +
       geom_line() +
-      labs(y = "deltaF/F")
+      labs(y = "deltaF/F") +
+      labs(title = neuron_prefix)
     p2 <- ggplot(data, aes(x = time)) +
       geom_line(aes(y = MeanBackground), colour = "red") +
       # geom_text(data = subset(data, time == max(data$time)),

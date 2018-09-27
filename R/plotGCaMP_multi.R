@@ -44,6 +44,8 @@ plotGCaMP_multi <- function(FileFilter,
                             neuron = GCAMP,
                             linear = FALSE,
                             nls = TRUE,
+                            backsub = TRUE,
+                            heatmap_limits = "auto",
                             ...) {
   library(tidyverse)
   library(magrittr)
@@ -59,6 +61,7 @@ plotGCaMP_multi <- function(FileFilter,
   folderPath <- dirname(file.choose())
   print(folderPath)
 
+  #### import, format and correct for photobleaching ####
   if(matlab == TRUE) {
     files <- list.files(file.path(folderPath), pattern = "*.mat", recursive = TRUE)
     files <- files[stringr::str_detect(files, pattern = paste0(FileFilter))]
@@ -72,24 +75,25 @@ plotGCaMP_multi <- function(FileFilter,
                                              nls = nls,
                                              startPulse = startPulse,
                                              endPulse = ))
-                } else {
+                } else { #for matlab = FALSE
                   neuronfiles <- list.files(file.path(folderPath), pattern = "*neuron_results.csv", recursive = TRUE)
                   neuronfiles <- neuronfiles[stringr::str_detect(neuronfiles, pattern = paste0(FileFilter))]
                   neuronfilenames <- neuronfiles
 
                   neuronfiles <- file.path(folderPath, neuronfiles)
-# backgroundfiles <- list.files(file.path(folderPath), pattern = "*background_results.csv", recursive = TRUE)
-# backgroundfiles <- neuronfiles[stringr::str_detect(backgroundfiles, pattern = paste0(FileFilter))]
-# backgroundfiles <- file.path(folderPath, backgroundfiles)
+
+                  message("merging imageJ files")
 
                   purrr::map(
                     neuronfiles,
-                    ~ merge_FIJI_data(neuronfile = ., show.plots = show.plots))
+                    ~ merge_FIJI_data(neuronfile = ., show.plots = show.plots, backsub = backsub))
+
 
                   files <- list.files(file.path(folderPath), pattern = "*ImageJ_data.csv", recursive = TRUE)
                   files <- files[stringr::str_detect(files, pattern = paste0(FileFilter))]
                   filenames <- files
                   files <- file.path(folderPath, files)
+                  message("correcting photobleaching")
                   data <- map(files, ~ exp.fit.all.log.lin(
                     filename = .,
                     skip.time = 10,
@@ -98,7 +102,9 @@ plotGCaMP_multi <- function(FileFilter,
                     linear = linear,
                     nls = nls
 ))
+
   }
+
 
 
   data %<>% data_frame(data = .,
@@ -110,7 +116,7 @@ plotGCaMP_multi <- function(FileFilter,
                        neuron = neuron)
 
 
-  # recenter mean values
+  #### recenter mean values ####
   if(center_on_pulse == "OFF") {
 
     means <- data %>% unnest %>%
@@ -118,7 +124,7 @@ plotGCaMP_multi <- function(FileFilter,
       filter(time > (startPulse+endPulse)/2 & time < endPulse) %>%
       summarise(mean_pulse_delF = mean(delF))
 
-    data <- full_join(data, means)
+    data <- left_join(data, means, by = "animal")
 
     data %<>% unnest %>%
       group_by(animal, animal_num) %>%
@@ -133,7 +139,7 @@ plotGCaMP_multi <- function(FileFilter,
       filter(time > startPulse/2 & time < startPulse) %>%
       summarise(mean_pulse_delF = mean(delF))
 
-    data <- full_join(data, means)
+    data <- left_join(data, means, by = "animal")
 
     data %<>% unnest %>%
       group_by(animal,animal_num) %>%
@@ -141,7 +147,8 @@ plotGCaMP_multi <- function(FileFilter,
       nest()
   }
 
-  # arrange heat map settings
+  #### arrange heat map settings ####
+
   if(center_on_pulse == "OFF") {
     plot_order <- data %>%
       unnest() %>%
@@ -149,9 +156,9 @@ plotGCaMP_multi <- function(FileFilter,
       summarise(maxD = max_delta(delF, end = endPulse)) %>%
       arrange(maxD)
 
-    breaks = c(-.5,0,1.5)
-    labels = c("-.5", "0", "1.5")
-    limits = c(-0.5,1.5)
+    # breaks = c(-.5,0,1.5)
+    # labels = c("-.5", "0", "1.5")
+    # limits = c(-0.5,1.5)
   }
 
   if(center_on_pulse %in% c("ON", FALSE)) {
@@ -161,9 +168,9 @@ plotGCaMP_multi <- function(FileFilter,
       summarise(maxD = max_delta(delF, end = startPulse)) %>%
       arrange(maxD)
 
-    breaks = c(-.5,0,1.5)
-    labels = c("-.5", "0", "1.5")
-    limits = c(-0.5,1.5)
+    # breaks = c(-.5,0,1.5)
+    # labels = c("-.5", "0", "1.5")
+    # limits = c(-0.5,1.5)
   }
 
   if(use.Fmax == TRUE) {
@@ -178,10 +185,24 @@ plotGCaMP_multi <- function(FileFilter,
       mutate(delF = (delF - Fo) / (max_delF - Fo)) %>%
       nest()
 
-    breaks = c(0,0.5,1)
-    labels = c("0", "0.5", "1")
-    limits = c(0,1)
+    # breaks = c(0,0.5,1)
+    # labels = c("0", "0.5", "1")
+    # limits = c(0,1)
 
+  }
+
+  if(heatmap_limits == "auto") {
+    breaks <- round(
+      c(min(c(min(plot_order$maxD),0)),
+        0,
+        max(plot_order$maxD)),
+      1)
+    labels <- as.character(breaks)
+    limits <- breaks[c(1,3)]
+  } else {
+    breaks <- heatmap_limits
+    labels <- as.character(breaks)
+    limits <- breaks[c(1,3)]
   }
 
 
@@ -196,16 +217,16 @@ plotGCaMP_multi <- function(FileFilter,
                      yend = limits[2])) +
     annotate(geom = "text",
              label = cue,
-             y = limits[2] + 0.2,
+             y = 1.2*limits[2],
              x = (startPulse + endPulse)/2,
-             size = 8) +
+             size = 6) +
     annotate(geom = "text",
              label = genotype,
-             y = limits[2] + 0.2,
+             y = 1.2*limits[2],
              x = 10,
              fontface = "italic",
-             size = 8) +
-    coord_cartesian(ylim = c(limits[1], limits[2]+0.5)) +
+             size = 6) +
+    coord_cartesian(ylim = c(limits[1], 1.5*limits[2])) +
     theme(axis.text = element_text(size = 16),
           axis.title = element_text(size = 18),
           axis.title.x = element_blank())
@@ -232,7 +253,7 @@ plotGCaMP_multi <- function(FileFilter,
     ggsave(plots, filename = file.path(folderPath,paste0(genotype,"_",cue,neuron,"_delFmaxplots.png")),
            width = 11, height = 8.5, units = "in")
   } else {
-    ggsave(plots, filename = file.path(folderPath,paste0(genotype,"_",cue,neuron,"_plots.png")),
+    ggsave(plots, filename = file.path(folderPath,paste0(genotype,"_",cue,"_",neuron,"_",food,"_plots.png")),
            width = 11, height = 8.5, units = "in")
   }
 

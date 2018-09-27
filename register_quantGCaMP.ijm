@@ -3,16 +3,20 @@ open(filepath1);
 dir = File.getParent(filepath1);
 fname = File.nameWithoutExtension();
 fname2 = replace(fname,"_MMStack_Pos0.ome","")
-waitForUser("select square qround neuron");
+waitForUser("REGISTRATION: select large square around neuron");
 setTool("rectangle");
 run("Align slices in stack...");
 run("Enlarge...", "enlarge=60");
 run("Crop");
+run("In [+]");
+run("In [+]");
+run("In [+]");
 saveAs("Tiff", dir + "/" + fname2 + "_reg");
 //close();
-waitForUser("select ROI around neuron");
+waitForUser("GCaMP: select ROI around neuron");
 run("Set Measurements...", "area mean modal min median stack display invert redirect=None decimal=3");
 saveSettings;
+setTool("freehand");
 setOption("Stack position", true);
        for (n=1; n<=nSlices; n++) {
           setSlice(n);
