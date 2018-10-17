@@ -16,11 +16,14 @@ Imports:
     ggthemes,
     viridis,
     tidyr,
-    patchwork,
     scales,
-    readr
+    readr,
+    R.matlab,
+    ggrepel,
+    tidyverse,
+    purrr
 Remotes:
     thomasp85/patchwork
 License: What license is it under?
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0

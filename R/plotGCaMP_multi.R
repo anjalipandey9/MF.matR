@@ -94,7 +94,7 @@ plotGCaMP_multi <- function(FileFilter,
                   filenames <- files
                   files <- file.path(folderPath, files)
                   message("correcting photobleaching")
-                  data <- map(files, ~ exp.fit.all.log.lin(
+                  data <- purrr::map(files, ~ exp.fit.all.log.lin(
                     filename = .,
                     skip.time = 10,
                     show.plots = show.plots,

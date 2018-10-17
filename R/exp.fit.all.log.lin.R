@@ -28,7 +28,7 @@ exp.fit.all.log.lin <- function(filename,
     rm(signal)
     rm(time)
   } else {
-    df <- read.csv(filename) %>% dplyr::select(signal, MeanGCaMP, time)
+    df <- read_csv(filename) %>% dplyr::select(signal, MeanGCaMP, time)
   }
 
 
@@ -51,7 +51,7 @@ exp.fit.all.log.lin <- function(filename,
       }
     }
 
-  } else {
+  } else { #for nls = FALSE
       fit1 <- try(nls(signal ~ SSasymp(time, Asym, R0, lrc),
                   data = dplyr::filter(df, time < 29 | time > (60 + 10))))
       correction <- "nls"
@@ -75,13 +75,13 @@ if (inherits(fit1, "try-error")) {
   # for linear fit,
   # correct after fitted values go below zero (~ 20s)
   if(nls == FALSE) {
-    df %<>% mutate(corrected = case_when(
+    df %<>% mutate(corrected = dplyr::case_when(
       fit1$coefficients[2] > 0 ~ signal, #ignore inverted exp fit
       fitted > 0 ~ signal, #ignore cases which have linear fit > 0
       TRUE ~ signal - fitted
       ))
   } else {
-    df %<>% mutate(corrected = signal - fitted)
+    df %<>% dplyr::mutate(corrected = signal - fitted)
   }
 
 
@@ -96,5 +96,5 @@ if (inherits(fit1, "try-error")) {
   if(show.plots) {
     print(p)
   }
-  return(df %>% rename(delF = corrected))
+  return(df %>% dplyr::rename(delF = corrected))
 }
