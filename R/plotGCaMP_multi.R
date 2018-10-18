@@ -25,9 +25,11 @@
 #' @param use.Fmax normalize amplitude to 1
 #' @param neuron neuron being analyzed
 #' @param linear optional argument piped into exp.fit.all.log.lin include a linear term in the fit?
+#' @param heatmap_limits optional 3-value vector defining the color scale and y axis limits, ie c(-1,0,2)
 #'
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
+#' @importFrom magrittr "%$%"
 #' @export
 #' @examples data <- plotGCaMP_multi(N2, genotype = N2, cue = octanol)
 #'
@@ -69,7 +71,7 @@ plotGCaMP_multi <- function(FileFilter,
     files <- file.path(folderPath, files)
     #df <- data.frame(x = 1, genotype = genotype, cue = cue)
 
-    data <- map(files, ~ exp.fit.all.log.lin(filename = .,
+    data <- purrr::map(files, ~ exp.fit.all.log.lin(filename = .,
                                              skip.time = 10,
                                              show.plots = show.plots,
                                              nls = nls,
@@ -192,11 +194,15 @@ plotGCaMP_multi <- function(FileFilter,
   }
 
   if(heatmap_limits == "auto") {
+    # breaks <- round(
+    #   c(min(c(min(plot_order$maxD),0)),
+    #     0,
+    #     max(plot_order$maxD)),
+    #   1)
     breaks <- round(
-      c(min(c(min(plot_order$maxD),0)),
-        0,
-        max(plot_order$maxD)),
-      1)
+      data %>% unnest %$% quantile(delF, c(0.05, 0.5, 0.99)),
+      1
+    )
     labels <- as.character(breaks)
     limits <- breaks[c(1,3)]
   } else {

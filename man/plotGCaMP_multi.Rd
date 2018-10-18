@@ -40,6 +40,8 @@ plotGCaMP_multi(FileFilter, matlab = TRUE, genotype, cue = cue,
 \item{neuron}{neuron being analyzed}
 
 \item{linear}{optional argument piped into exp.fit.all.log.lin include a linear term in the fit?}
+
+\item{heatmap_limits}{optional 3-value vector defining the color scale and y axis limits, ie c(-1,0,2)}
 }
 \description{
 Function is a wrapper for exp.fit.all.log.lin which outputs corrected GCaMP signals as well as plots showing

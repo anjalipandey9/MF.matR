@@ -40,7 +40,7 @@ exp.fit.all.log.lin <- function(filename,
 
   if(nls == FALSE) {
     if(linear == FALSE) {
-      fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time))
+      fit1 <- lm(data = df[c(skip.time:startPulse*4, (endPulse*4 + 40):nrow(df)), ], signal ~ log(time))
       correction <- "log"
     } else {
       fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time) + time) # plus last 15s
@@ -51,9 +51,9 @@ exp.fit.all.log.lin <- function(filename,
       }
     }
 
-  } else { #for nls = FALSE
+  } else { #for nls = TRUE
       fit1 <- try(nls(signal ~ SSasymp(time, Asym, R0, lrc),
-                  data = dplyr::filter(df, time < 29 | time > (60 + 10))))
+                  data = dplyr::filter(df, time < startPulse | time > (endPulse + 10))))
       correction <- "nls"
   }
 
