@@ -45,8 +45,9 @@ plotGCaMP_multi(FileFilter, matlab = TRUE, genotype, cue = cue,
 }
 \description{
 Function is a wrapper for exp.fit.all.log.lin which outputs corrected GCaMP signals as well as plots showing
-original and corrected signals. Also plots average trace for GCaMP signal. Inputs are matfiles.
-The script searches recursively for matfiles from a startPulseer file (can be any placeholder file). Need to exclude
+original and corrected signals. Also plots average trace for GCaMP signal. Inputs are matfiles with a "signal" field,
+or .csv files from imageJ analysis.
+The script searches recursively for matfiles (*.mat) or csv files (\*.csv) from a file (can be any placeholder file). Need to exclude
 matfiles that are not GCaMP files either using FileFilter, or by putting only relevant files in the folder. Default
 startpulse assumes 400ms delay for camera recording.
 Requires max_delta helper function

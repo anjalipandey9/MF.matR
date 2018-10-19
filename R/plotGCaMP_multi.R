@@ -1,8 +1,9 @@
 #' plotGCaMP_multi
 #'
 #' Function is a wrapper for exp.fit.all.log.lin which outputs corrected GCaMP signals as well as plots showing
-#' original and corrected signals. Also plots average trace for GCaMP signal. Inputs are matfiles.
-#' The script searches recursively for matfiles from a startPulseer file (can be any placeholder file). Need to exclude
+#' original and corrected signals. Also plots average trace for GCaMP signal. Inputs are matfiles with a "signal" field,
+#' or .csv files from imageJ analysis.
+#' The script searches recursively for matfiles (*.mat) or csv files (\*.csv) from a file (can be any placeholder file). Need to exclude
 #' matfiles that are not GCaMP files either using FileFilter, or by putting only relevant files in the folder. Default
 #' startpulse assumes 400ms delay for camera recording.
 #' Requires max_delta helper function
@@ -15,17 +16,14 @@
 #' @param startPulse begin of stimulus
 #' @param endPulse endPulse time of stimulus
 #' @param center_on_pulse optional parameter to center delF values by the mean of the stimulus duration
-#' 1 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of increase)
-#' 2 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of increase)
-#' 3 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of decrease)
-#' 4 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of decrease)
-#' 'OFF' = Bring values to mean delF of 2nd half pre-pulse duration, order by OFF responses
+#' 'OFF' = Bring values to mean delF of 2nd half of pulse duration, order by OFF responses
 #' 'ON' = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses
 #' @param show.plots render plots for baseline correction - defaults to TRUE
 #' @param use.Fmax normalize amplitude to 1
 #' @param neuron neuron being analyzed
 #' @param linear optional argument piped into exp.fit.all.log.lin include a linear term in the fit?
 #' @param heatmap_limits optional 3-value vector defining the color scale and y axis limits, ie c(-1,0,2)
+#' @param folderpath user supplied path for recursive file search. If missing, it will prompt for a fiel selection.
 #'
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
@@ -48,6 +46,7 @@ plotGCaMP_multi <- function(FileFilter,
                             nls = TRUE,
                             backsub = TRUE,
                             heatmap_limits = "auto",
+                            folderpath,
                             ...) {
   library(tidyverse)
   library(magrittr)
@@ -60,7 +59,9 @@ plotGCaMP_multi <- function(FileFilter,
   neuron <- quo_name(enquo(neuron))
   center_on_pulse <- quo_name(enquo(center_on_pulse))
 
-  folderPath <- dirname(file.choose())
+  if(missing(folderpath)) {
+    folderPath <- dirname(file.choose())
+  }
   print(folderPath)
 
   #### import, format and correct for photobleaching ####
