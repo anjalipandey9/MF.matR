@@ -1,5 +1,7 @@
 ---
 output: github_document
+fig_width: 6 
+fig_height: 4 
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -18,31 +20,87 @@ This is a repository of tools to be used for analysis of <i>C. elegans</i> behav
 
 ## Installation
 
-You can install the released version of MF.matR from github with:
+You can install the recent version of MF.matR from github with:
 
-``` {r}
+``` {r, message = FALSE, warning = FALSE}
 devtools::install_github("mikeod38/MF.matR")
 ```
 
 ## Calcium imaging analysis
 
-Often we want to both analyze Ca2+ imaging data from multiple worms and generate summary plots. Main function for this is plotGCaMP_multi(). This function imports either matlab- or imageJ analyzed calcium imagaing date from single worms. 
+Often we want to both analyze Ca2+ imaging data from multiple worms and generate summary plots. Main function for this is plotGCaMP_multi(). This function imports either matlab- or imageJ analyzed calcium imagaing date from single worms. (use "matlab = FALSE" if you want to use imageJ-processed data)
 
-```{r example, message=TRUE}
+```{r example, message=FALSE, warning = FALSE}
 library(MF.matR)
-# CaData <- plotGCaMP_multi(FileFilter = OP50,
-#                           genotype = N2,
-#                           cue = hexanol,
-#                           nls = TRUE,
-#                           center_on_pulse = 'OFF',
-#                           startPulse = 29.5,
-#                           endPulse = 60.5,
-#                           show.plots = FALSE,
-#                           matlab = TRUE,
-#                           folderPath = here::here("extdata","Ca_imaging","mat_format"))
+library(tidyverse)
+theme_set(theme_classic())
+CaData <- plotGCaMP_multi(FileFilter = OP50,
+                          genotype = N2,
+                          cue = glycerol,
+                          nls = TRUE,
+                          center_on_pulse = 'ON',
+                          startPulse = 29.5,
+                          endPulse = 60.5,
+                          show.plots = FALSE,
+                          matlab = TRUE,
+                          folderPath = here::here("extdata","Ca_imaging","mat_format"))
 
-#?MF.matR::plotGCaMP_multi()
+```
+This gives us access to a data file 'CaData', which is a list of two, containing raw data and a plot:
+
+
+```{r, message=FALSE, warning = FALSE}
+glimpse(CaData,max.level = 1)
 
 ```
 
+We can look at each individually. First the data:
+
+```{r}
+CaData$data
+```
+
+Notice this is grouped by animal, which comes from the filename, and the raw data is "nested" within the 'data' column. It contains another 10 columns of values, and is 360 rows long (the # of frames). We can "unnest" the data:
+
+```{r}
+CaData$data %>% unnest() %>% glimpse
+```
+
+- So you can access the raw data and do some more interesting things with it. 
+
+And the plot:
+
+```{r, out.width = '40%'}
+CaData$plot
+```
+
+But if we want to plot maximum amplitude, we can do that directly from the data:
+
+```{r,  out.width = '40%'}
+CaData$data %>%
+  unnest() %>% 
+  group_by(animal, maxD, genotype) %>%
+  nest() %>% 
+  ggplot(aes(y=maxD, x = genotype)) +
+  geom_point() +
+  coord_cartesian(ylim = c(0,1.5)) +
+  labs(x = "", y = "max DeltaF/F")
+```
+
+This script attempts to find evidence of bleaching, ie an exponential decay. This works best if using time-points in which there are no responses. By default, the function uses a range defined by "startPulse" and "endPulse". These can be changed. 
+
+We can inspect how the correction was done, we can run the plot function, this time with "show.plots = TRUE". This time we'll use imageJ-analyzed data (using matlab = FALSE) to show both the raw pixel values, as well as the background-subtracted values. You can use the raw, non-background-subtracted delta F with "backsub = FALSE".
+
+```{r, warning=FALSE, message = FALSE, out.width = '40%'}
+plotGCaMP_multi(FileFilter = OP50,
+                          genotype = N2,
+                          cue = glycerol,
+                          nls = TRUE,
+                          center_on_pulse = 'ON',
+                          startPulse = 29.5,
+                          endPulse = 60.5,
+                          show.plots = TRUE,
+                          matlab = FALSE,
+                          folderPath = here::here("extdata","Ca_imaging","imageJ_format"))
+```
 

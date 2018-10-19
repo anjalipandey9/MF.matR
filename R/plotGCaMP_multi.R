@@ -48,6 +48,9 @@ plotGCaMP_multi <- function(FileFilter,
                             heatmap_limits = "auto",
                             folderPath,
                             ...) {
+
+  message("this function is for analyzing calcium imaging data, for details,
+          go to https://github.com/mikeod38/MF.matR")
   library(tidyverse)
   library(magrittr)
   library(patchwork)
@@ -62,7 +65,7 @@ plotGCaMP_multi <- function(FileFilter,
   if(missing(folderPath)) {
     folderPath <- dirname(file.choose())
   }
-  print(folderPath)
+  message(paste("using files at or below the folder:", basename(folderPath)))
 
   #### import, format and correct for photobleaching ####
   if(matlab == TRUE) {
