@@ -8,7 +8,7 @@ plotGCaMP_multi(FileFilter, matlab = TRUE, genotype, cue = cue,
   food = OP50, startPulse = 29.5, endPulse = 59.5,
   center_on_pulse = FALSE, show.plots = TRUE, use.Fmax = FALSE,
   neuron = GCAMP, linear = FALSE, nls = TRUE, backsub = TRUE,
-  heatmap_limits = "auto", ...)
+  heatmap_limits = "auto", folderPath, ...)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
@@ -26,11 +26,7 @@ plotGCaMP_multi(FileFilter, matlab = TRUE, genotype, cue = cue,
 \item{endPulse}{endPulse time of stimulus}
 
 \item{center_on_pulse}{optional parameter to center delF values by the mean of the stimulus duration
-1 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of increase)
-2 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of increase)
-3 = Bring values to mean delF of 2nd half pulse duration, order heatmaps by OFF responses (magnitude of decrease)
-4 = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses (magnitude of decrease)
-'OFF' = Bring values to mean delF of 2nd half pre-pulse duration, order by OFF responses
+'OFF' = Bring values to mean delF of 2nd half of pulse duration, order by OFF responses
 'ON' = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses}
 
 \item{show.plots}{render plots for baseline correction - defaults to TRUE}
@@ -42,6 +38,8 @@ plotGCaMP_multi(FileFilter, matlab = TRUE, genotype, cue = cue,
 \item{linear}{optional argument piped into exp.fit.all.log.lin include a linear term in the fit?}
 
 \item{heatmap_limits}{optional 3-value vector defining the color scale and y axis limits, ie c(-1,0,2)}
+
+\item{folderpath}{user supplied path for recursive file search. If missing, it will prompt for a fiel selection.}
 }
 \description{
 Function is a wrapper for exp.fit.all.log.lin which outputs corrected GCaMP signals as well as plots showing

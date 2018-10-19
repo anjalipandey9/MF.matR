@@ -1,28 +1,34 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-MF.matR
-=======
 
-This is a repository of tools to be used for analysis of <i>C. elegans</i> behavioral and calcium imaging data. It's a work in progress intened to mate matlab and R functions.
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+# MF.matR
 
-Installation
-------------
+This is a repository of tools to be used for analysis of <i>C. elegans</i> behavioral  and calcium imaging data. It's a work in progress intened to mate matlab and R functions.
+
+## Installation
 
 You can install the released version of MF.matR from github with:
 
-``` r
+``` {r}
 devtools::install_github("mikeod38/MF.matR")
-#> Using GitHub PAT from envvar GITHUB_PAT
-#> Skipping install of 'MF.matR' from a github remote, the SHA1 (e92b1eed) has not changed since last install.
-#>   Use `force = TRUE` to force installation
 ```
 
-Calcium imaging analysis
-------------------------
+## Calcium imaging analysis
 
-Often we want to both analyze Ca2+ imaging data from multiple worms and generate summary plots. Main function for this is plotGCaMP\_multi(). This function imports either matlab- or imageJ analyzed calcium imagaing date from single worms.
+Often we want to both analyze Ca2+ imaging data from multiple worms and generate summary plots. Main function for this is plotGCaMP_multi(). This function imports either matlab- or imageJ analyzed calcium imagaing date from single worms. 
 
-``` r
+```{r example, message=TRUE}
 library(MF.matR)
 # CaData <- plotGCaMP_multi(FileFilter = OP50,
 #                           genotype = N2,
@@ -36,4 +42,7 @@ library(MF.matR)
 #                           folderPath = here::here("extdata","Ca_imaging","mat_format"))
 
 #?MF.matR::plotGCaMP_multi()
+
 ```
+
+

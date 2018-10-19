@@ -46,7 +46,7 @@ plotGCaMP_multi <- function(FileFilter,
                             nls = TRUE,
                             backsub = TRUE,
                             heatmap_limits = "auto",
-                            folderpath,
+                            folderPath,
                             ...) {
   library(tidyverse)
   library(magrittr)
@@ -59,7 +59,7 @@ plotGCaMP_multi <- function(FileFilter,
   neuron <- quo_name(enquo(neuron))
   center_on_pulse <- quo_name(enquo(center_on_pulse))
 
-  if(missing(folderpath)) {
+  if(missing(folderPath)) {
     folderPath <- dirname(file.choose())
   }
   print(folderPath)

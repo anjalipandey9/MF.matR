@@ -20,6 +20,7 @@ exp.fit.all.log.lin <- function(filename,
                                 nls = FALSE,
                                 startPulse = 29.5,
                                 endPulse = 60.5) {
+
   if(matlab == TRUE) {
     matfile <- R.matlab::readMat(filename, fixNames = TRUE)
     signal <- matfile$signal
@@ -69,7 +70,7 @@ if (inherits(fit1, "try-error")) {
 
 
 
- df %<>% mutate(fitted = fitted,
+ df %<>% dplyr::mutate(fitted = fitted,
                 correction = correction)
 
   # for linear fit,
