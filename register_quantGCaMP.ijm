@@ -3,7 +3,7 @@ open(filepath1);
 dir = File.getParent(filepath1);
 fname = File.nameWithoutExtension();
 fname2 = replace(fname,"_MMStack_Pos0.ome","")
-waitForUser("REGISTRATION: select large square around neuron");
+waitForUser("REGISTRATION: select large square around neuron (just click 'OK' on the next 2 popups)");
 setTool("rectangle");
 run("Align slices in stack...");
 run("Enlarge...", "enlarge=60");

@@ -9,19 +9,27 @@
 #' @examples
 #' Import.WL.data(bin.length = 2, frame.rate = 6)
 
-Import.WL.data <- function(bin.length, frame.rate, num.tracks, multiple, ...) {
+Import.WL.data <- function(bin.length = 4, frame.rate, num.tracks, multiple, head.correct = FALSE, ...) {
   library(tidyverse)
 
   #### import data ### - use  readr to improve speed
   if(missing(multiple)) {
-    message("Choose a position analysis file")
+    message("Choose a WormLab project file")
     filename <- file.choose()
   } else {
     filename <- mult_pos_file
   }
-  file.pref <- basename(filename) %>% strsplit(., c("Position","position")) %>% unlist()
+  #file.pref <- basename(filename) %>% strsplit(., c("Position","position")) %>% unlist()
+  file.pref <- basename(filename) %>% strsplit(., c(".wdf", ".wpr")) %>% unlist()
+  print(file.pref)
   folder <- dirname(filename)
-  file_list  <- list.files(path = file.path(folder),pattern = file.pref[1])
+
+  if(missing(multiple)) {
+    file_list <- list.files(path = file.path(folder))
+  } else {
+    file_list  <- list.files(path = file.path(folder),pattern = file.pref[1])
+  }
+
 
   position.path <- file.path(folder, file_list[grep("osition.csv",file_list)])
   direction.path <- file.path(folder, file_list[grep("irection.csv",file_list)])
@@ -31,11 +39,18 @@ Import.WL.data <- function(bin.length, frame.rate, num.tracks, multiple, ...) {
   omega.path <- file.path(folder, file_list[grep("megaBend.csv",file_list)])
 
   message("loading in data")
+  print(position.path)
+  print(file_list)
   position <- read.csv(position.path, skip=4)
+  message("position done")
   direction <- read.csv(direction.path, skip=4)
+  message("direction done")
   speed <- read.csv(speed.path, skip=4)
+  message("dir and speed done")
   length <- read.csv(length.path, skip=4)
+  message("length done")
   width <- read.csv(width.path, skip=4)
+  message("width done")
   state <- read.csv(omega.path, skip=4)
 
   ####Setting up parameters####
@@ -114,71 +129,72 @@ print(system.time(WL.alldata <- list(WL.centroid,
       dplyr::filter(!is.na(curve.ang))
     ))
 
-  message("Correcting head direction")
+  if(head.correct == TRUE) {
+    message("Correcting head direction")
 
 
-  #setting run direction threshold
+    #setting run direction threshold
 
 
-WL.alldata <- WL.alldata %>%
-                      dplyr::mutate(run.dir = dplyr::case_when(speed < -30 ~ -1,
-                                                               speed > 30 ~ 1,
-                                                               TRUE ~ 0))
+    WL.alldata <- WL.alldata %>%
+      dplyr::mutate(run.dir = dplyr::case_when(speed < -30 ~ -1,
+                                               speed > 30 ~ 1,
+                                               TRUE ~ 0))
 
-# using rle(), get length of runs in each direction, then get max in REVERSE direction
+    # using rle(), get length of runs in each direction, then get max in REVERSE direction
 
-backwards <- purrr::possibly(WL.alldata %>%
-  dplyr::group_by(worm) %>%
-  dplyr::do({
-    tmp <- cbind(with(rle(.$run.dir==-1), lengths[values]))
-    data.frame(worm= .$worm, Max.back=if(length(tmp)==0) 0
-             else max(tmp)) }) %>%
-  dplyr::slice(1L))
+    backwards <- purrr::possibly(WL.alldata %>%
+                                   dplyr::group_by(worm) %>%
+                                   dplyr::do({
+                                     tmp <- cbind(with(rle(.$run.dir==-1), lengths[values]))
+                                     data.frame(worm= .$worm, Max.back=if(length(tmp)==0) 0
+                                                else max(tmp)) }) %>%
+                                   dplyr::slice(1L))
 
-# using rle(), get length of runs in each direction, then get max in FORWARD direction
-forward <- purrr::possibly(WL.alldata %>%
-  dplyr::group_by(worm) %>%
-  dplyr::do({tmp <- cbind(with(rle(.$run.dir==1), lengths[values]))
-  data.frame(worm= .$worm, Max.for=if(length(tmp)==0) 0
-             else max(tmp)) }) %>%
-  dplyr::slice(1L))
+    # using rle(), get length of runs in each direction, then get max in FORWARD direction
+    forward <- purrr::possibly(WL.alldata %>%
+                                 dplyr::group_by(worm) %>%
+                                 dplyr::do({tmp <- cbind(with(rle(.$run.dir==1), lengths[values]))
+                                 data.frame(worm= .$worm, Max.for=if(length(tmp)==0) 0
+                                            else max(tmp)) }) %>%
+                                 dplyr::slice(1L))
 
-max_runs <- dplyr::full_join(backwards,forward)
+    max_runs <- dplyr::full_join(backwards,forward)
 
-# # switch direction of worms that have longer runs in reverse than forward
-WL.alldata <- WL.alldata %>%
-  dplyr::mutate(
-    speed = dplyr::case_when(
-    worm %in% max_runs[max_runs$Max.back > max_runs$Max.for,]$worm ~ -(speed),
-    TRUE ~ speed),
-    corrected = dplyr::case_when(
-      worm %in% max_runs[max_runs$Max.back > max_runs$Max.for,]$worm ~ 1,
-      TRUE ~ 0),
-    head.dir = dplyr::case_when(
-      corrected == 0 &
-        (move.dir %% 360) %% 360 < 155 &
-        (move.dir %% 360) %% 360 > 25 ~ "up",
-      corrected == 0 &
-        (move.dir %% 360) %% 360 > 205 &
-        (move.dir %% 360) %% 360 < 335 ~ "down",
-      corrected == 0 &
-        (move.dir %% 360) %% 360 > 155 &
-        (move.dir %% 360) %% 360 < 205 ~ "right",
-      corrected == 0 &
-        ((move.dir %% 360) %% 360 < 25 |
-         (move.dir %% 360) %% 360 > 335) ~ "left",
-      corrected == 1 &
-        (move.dir %% 360) %% 360 < 155 &
-        (move.dir %% 360) %% 360 > 25 ~ "down",
-      corrected == 1 &
-        (move.dir %% 360) %% 360 > 205 &
-        (move.dir %% 360) %% 360 < 335 ~ "up",
-      corrected == 1 &
-        (move.dir %% 360) %% 360 > 155 &
-        (move.dir %% 360) %% 360 < 205 ~ "left",
-      TRUE ~ "right"
-    ))
-
+    # # switch direction of worms that have longer runs in reverse than forward
+    WL.alldata <- WL.alldata %>%
+      dplyr::mutate(
+        speed = dplyr::case_when(
+          worm %in% max_runs[max_runs$Max.back > max_runs$Max.for,]$worm ~ -(speed),
+          TRUE ~ speed),
+        corrected = dplyr::case_when(
+          worm %in% max_runs[max_runs$Max.back > max_runs$Max.for,]$worm ~ 1,
+          TRUE ~ 0),
+        head.dir = dplyr::case_when(
+          corrected == 0 &
+            (move.dir %% 360) %% 360 < 155 &
+            (move.dir %% 360) %% 360 > 25 ~ "up",
+          corrected == 0 &
+            (move.dir %% 360) %% 360 > 205 &
+            (move.dir %% 360) %% 360 < 335 ~ "down",
+          corrected == 0 &
+            (move.dir %% 360) %% 360 > 155 &
+            (move.dir %% 360) %% 360 < 205 ~ "right",
+          corrected == 0 &
+            ((move.dir %% 360) %% 360 < 25 |
+               (move.dir %% 360) %% 360 > 335) ~ "left",
+          corrected == 1 &
+            (move.dir %% 360) %% 360 < 155 &
+            (move.dir %% 360) %% 360 > 25 ~ "down",
+          corrected == 1 &
+            (move.dir %% 360) %% 360 > 205 &
+            (move.dir %% 360) %% 360 < 335 ~ "up",
+          corrected == 1 &
+            (move.dir %% 360) %% 360 > 155 &
+            (move.dir %% 360) %% 360 < 205 ~ "left",
+          TRUE ~ "right"
+        ))
+  }
 
 message("adding behavioral states")
 
@@ -191,7 +207,7 @@ print(system.time(WL.alldata <- WL.alldata %>%
     TRUE ~ "forward"
   ))))
 
-data.table::fwrite(WL.alldata, file.path(folder,paste0(file.pref[1],"all_track_data.csv")))
+data.table::fwrite(WL.alldata, file.path(folder,paste0(file.pref[1],"_all_track_data.csv")))
 
   return(WL.alldata)
 }
