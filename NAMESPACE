@@ -3,6 +3,7 @@
 S3method(exp,fit.all.log.lin)
 export(GetSripeProp)
 export(Import.WL.data)
+export(Prism_scatter)
 export(WLmult_dauer_res)
 export(WriteStripeProp)
 export(beh_mat)
