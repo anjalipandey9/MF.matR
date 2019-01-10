@@ -1,4 +1,4 @@
-#' plotGCaMP_multi
+#' Prism_scatter
 #'
 #' This function replicates prism-like scatter plots with a bar-graph and a scatterplot with SEM values.
 #' It requires discrete x, but can use interaction of multiple values to set x. Default is to colour value #1 black, and all else blue.
