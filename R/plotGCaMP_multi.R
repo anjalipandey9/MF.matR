@@ -24,6 +24,8 @@
 #' @param linear optional argument piped into exp.fit.all.log.lin include a linear term in the fit?
 #' @param heatmap_limits optional 3-value vector defining the color scale and y axis limits, ie c(-1,0,2)
 #' @param folderpath user supplied path for recursive file search. If missing, it will prompt for a fiel selection.
+#' @param backsub do you want to subtract background ie subtract ROI of background from the mean cell ROI? Defaults to TRUE
+#' @param plot.raw do you want to use raw deltaF/F values - ie not exponentially corrected? Defaults to FALSE
 #'
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
@@ -45,6 +47,7 @@ plotGCaMP_multi <- function(FileFilter,
                             linear = FALSE,
                             nls = TRUE,
                             backsub = TRUE,
+                            plot.raw = FALSE,
                             heatmap_limits = "auto",
                             folderPath,
                             ...) {
@@ -215,7 +218,7 @@ plotGCaMP_multi <- function(FileFilter,
     limits <- breaks[c(1,3)]
   }
 
-
+if(plot.raw == FALSE) {
   plot1 <- data %>% unnest() %>%
     ggplot(aes(x = time, y = delF)) +
     geom_line(aes(group = animal), alpha = 0.1) +
@@ -256,6 +259,49 @@ plotGCaMP_multi <- function(FileFilter,
           axis.title = element_text(size = 18),
           axis.text.y = element_blank()) +
     labs(y = "Animal number")
+} else {
+  plot1 <- data %>% unnest() %>%
+    ggplot(aes(x = time, y = signal)) +
+    geom_line(aes(group = animal), alpha = 0.1) +
+    geom_smooth(method = "loess", span = 0.05) +
+    theme_classic() +
+    geom_segment(aes(x = !!startPulse,
+                     y = limits[2],
+                     xend = !!endPulse,
+                     yend = limits[2])) +
+    annotate(geom = "text",
+             label = cue,
+             y = 1.2*limits[2],
+             x = (startPulse + endPulse)/2,
+             size = 6) +
+    annotate(geom = "text",
+             label = genotype,
+             y = 1.2*limits[2],
+             x = 10,
+             fontface = "italic",
+             size = 6) +
+    coord_cartesian(ylim = c(limits[1], 1.5*limits[2])) +
+    theme(axis.text = element_text(size = 16),
+          axis.title = element_text(size = 18),
+          axis.title.x = element_blank())
+
+  plot2 <-  full_join(data, plot_order) %>%
+    unnest() %>%
+    group_by(animal_num) %>%
+    ggplot(aes(x = time, y = fct_reorder(animal_num, maxD))) +
+    geom_tile(aes(fill = signal)) +
+    scale_fill_viridis_c(option = "magma",
+                         breaks = breaks,
+                         labels = labels,
+                         limits = limits,
+                         oob =squish) +
+    theme_classic() +
+    theme(axis.text = element_text(size = 16),
+          axis.title = element_text(size = 18),
+          axis.text.y = element_blank()) +
+    labs(y = "Animal number")
+}
+
 
   plots <- plot1 + plot2 + plot_layout(ncol = 1, heights = c(2,1))
 
