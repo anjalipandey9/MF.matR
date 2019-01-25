@@ -2,7 +2,7 @@
 % Please edit documentation in R/Prism_scatter.R
 \name{Prism_scatter}
 \alias{Prism_scatter}
-\title{plotGCaMP_multi}
+\title{Prism_scatter}
 \usage{
 Prism_scatter(data, xval, yval, facet, color_var, shape, ncolors, nbreaks,
   ...)
