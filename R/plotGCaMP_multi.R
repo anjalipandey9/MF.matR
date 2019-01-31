@@ -64,6 +64,7 @@ plotGCaMP_multi <- function(FileFilter,
   food <- quo_name(enquo(food))
   neuron <- quo_name(enquo(neuron))
   center_on_pulse <- quo_name(enquo(center_on_pulse))
+  #heatmap_limits <- enquo(heatmap_limits)
 
   if(missing(folderPath)) {
     folderPath <- dirname(file.choose())
@@ -200,12 +201,7 @@ plotGCaMP_multi <- function(FileFilter,
 
   }
 
-  if(heatmap_limits == "auto") {
-    # breaks <- round(
-    #   c(min(c(min(plot_order$maxD),0)),
-    #     0,
-    #     max(plot_order$maxD)),
-    #   1)
+  if(!is.numeric(heatmap_limits)) { # using auto calc unless a numeric vector input
     breaks <- round(
       data %>% unnest %$% quantile(delF, c(0.05, 0.5, 0.99)),
       1
