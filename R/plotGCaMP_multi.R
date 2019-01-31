@@ -34,7 +34,7 @@
 #' @examples data <- plotGCaMP_multi(N2, genotype = N2, cue = octanol)
 #'
 plotGCaMP_multi <- function(FileFilter,
-                            matlab = TRUE,
+                            matlab = FALSE,
                             genotype,
                             cue = cue,
                             food = OP50,
@@ -46,7 +46,7 @@ plotGCaMP_multi <- function(FileFilter,
                             neuron = GCAMP,
                             linear = FALSE,
                             nls = TRUE,
-                            backsub = TRUE,
+                            backsub = FALSE,
                             plot.raw = FALSE,
                             heatmap_limits = "auto",
                             folderPath,
