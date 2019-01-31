@@ -23,7 +23,7 @@ This is a repository of tools to be used for analysis of <i>C. elegans</i> behav
 You can install the recent version of MF.matR from github with:
 
 ``` {r, message = FALSE, warning = FALSE}
-devtools::install_github("mikeod38/MF.matR")
+devtools::install_github("SenguptaLab/MF.matR")
 ```
 
 ## Calcium imaging analysis
