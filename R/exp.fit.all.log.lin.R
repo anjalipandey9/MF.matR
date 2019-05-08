@@ -29,7 +29,7 @@ exp.fit.all.log.lin <- function(filename,
     rm(signal)
     rm(time)
   } else {
-    df <- read_csv(filename) %>% dplyr::select(signal, MeanGCaMP, time)
+    df <- read_csv(filename) %>% dplyr::select(signal, MeanGCaMP, time, MeanBackground)
   }
 
 

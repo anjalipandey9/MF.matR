@@ -1,3 +1,4 @@
+
 #' fix_reversals function
 #' attempts to fix mis-ID'ed reversals and carry forward any directional information.
 #' For example, it uses previous direction to assign this value for pirouettes and pauses
