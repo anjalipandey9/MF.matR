@@ -4,9 +4,9 @@
 \alias{plotGCaMP_multi}
 \title{plotGCaMP_multi}
 \usage{
-plotGCaMP_multi(FileFilter, matlab = FALSE, genotype, cue = cue,
-  food = OP50, startPulse = 29.5, endPulse = 59.5,
-  center_on_pulse = FALSE, show.plots = TRUE, use.Fmax = FALSE,
+plotGCaMP_multi(FileFilter, matlab = FALSE, genotype = genotype,
+  cue = cue, food = OP50, startPulse = 29.5, endPulse = 59.5,
+  center_on_pulse = "none", show.plots = TRUE, use.Fmax = FALSE,
   neuron = GCAMP, linear = FALSE, nls = TRUE, backsub = FALSE,
   plot.raw = FALSE, heatmap_limits = "auto", folderPath, ...)
 }

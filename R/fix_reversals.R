@@ -30,8 +30,6 @@ fix_reversals <- function (df) {
 
   df<-mutate(df, del.ang.temp = dir - lag(dir)) # find change in angle to from previous
   df$del.ang.temp<-abs(df$del.ang.temp) # take abs value for negatives
-
-  # fix head angle for reversals (most cases it's about 180º from previous heading, unless it's a string of reversals)
   df$head.ang<-ifelse(df$Rev == 1 & abs(c(NA, diff(df$dir, lag=1))) > 120, # if reversals accompany large dir change
                       df$dir - 180,
                       ifelse(df$Rev == 1 & c(NA,diff(df$Rev, lag = 1) == 0),
@@ -67,7 +65,7 @@ fix_reversals <- function (df) {
   # determine angle change to next time point,  all beh states - need to fix transition between wormID
   df<-mutate(df, del.ang= head.ang - lead(head.ang)) # find change in angle to next - !!if there's a pause this results in 180 output!!
   df$del.ang<-abs(df$del.ang)
-  df$del.ang.abs<-ifelse(df$del.ang>180, 360-df$del.ang, df$del.ang) # make the angle less than 180º
+  df$del.ang.abs<-ifelse(df$del.ang>180, 360-df$del.ang, df$del.ang) # make the angle less than 180
   df$post.rev<-ifelse(df$Rev == 1 &
                         c(diff(df$Rev, lead = 1),NA == 1), df$del.ang.abs, NA) # this still needs to be fixed, pause is biggest prob
   return(df)

@@ -35,12 +35,12 @@
 #'
 plotGCaMP_multi <- function(FileFilter,
                             matlab = FALSE,
-                            genotype,
+                            genotype = genotype,
                             cue = cue,
                             food = OP50,
                             startPulse = 29.5,
                             endPulse = 59.5,
-                            center_on_pulse = FALSE,
+                            center_on_pulse = "none",
                             show.plots = TRUE,
                             use.Fmax = FALSE,
                             neuron = GCAMP,
@@ -65,6 +65,31 @@ plotGCaMP_multi <- function(FileFilter,
   neuron <- quo_name(enquo(neuron))
   center_on_pulse <- quo_name(enquo(center_on_pulse))
   #heatmap_limits <- enquo(heatmap_limits)
+
+  Check <- ArgumentCheck::newArgCheck()
+
+  if (genotype == "genotype")
+    ArgumentCheck::addError(
+      msg = "You left out the 'genotype' argument, was this intentional?",
+      argcheck = Check)
+
+  if (cue == "cue")
+    ArgumentCheck::addError(
+      msg = "You left out the 'cue' argument, was this intentional?",
+      argcheck = Check)
+
+  if (!center_on_pulse %in% c("none", "ON", "OFF")) {
+    ArgumentCheck::addError(
+      msg = "'center_on_pulse' must be either 'none', 'ON'or 'OFF'",
+      argcheck = Check
+    )
+
+  }
+
+
+
+  #* Return errors and warnings (if any)
+  ArgumentCheck::finishArgCheck(Check)
 
   if(missing(folderPath)) {
     folderPath <- dirname(file.choose())
@@ -114,7 +139,6 @@ plotGCaMP_multi <- function(FileFilter,
 ))
 
   }
-
 
 
   data %<>% data_frame(data = .,
@@ -171,7 +195,7 @@ plotGCaMP_multi <- function(FileFilter,
     # limits = c(-0.5,1.5)
   }
 
-  if(center_on_pulse %in% c("ON", FALSE)) {
+  if(center_on_pulse %in% c("ON", "none")) {
     plot_order <- data %>%
       unnest() %>%
       group_by(animal, animal_num) %>%
@@ -309,6 +333,7 @@ if(plot.raw == FALSE) {
            width = 11, height = 8.5, units = "in")
   }
   write_csv(unnest(data), path = file.path(folderPath,paste0(genotype,"_",cue,"_",neuron,"_",food,"_rawdata.csv")))
+
 
   return(list(data = dplyr::full_join(data, plot_order), plot = plots))
 }
