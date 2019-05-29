@@ -1,12 +1,12 @@
 #' beh_mat melt function
 #' Takes a matlab behmat file and converts it to long format
 #' plus it assigns binary state columns to each behavioral state class
-#' @param n number of time frames to bin. generally 400 for 20 minute video is standard
+#' @param bins number of time frames to bin. generally 400 for 20 minute video is standard
 #' @export
 #' @examples
 #' beh_mat()
 
-beh_mat<- function (n) {
+beh_mat<- function (bins) {
   environment<-globalenv()
   message("Choose behmat file")
   behmat<-read.csv(file.choose())
@@ -19,7 +19,7 @@ beh_mat<- function (n) {
   behmat$pixelSize<-as.numeric(as.character(behmat$pixelSize))
   behmat<-subset(behmat, behmat$state<7) # eliminate untracked #7/8
   behmat$wormID<-behmat$genotype:behmat$exp:behmat$condition:behmat$animal # need to generalize this
-  behmat$bin<- cut(behmat$time, seq(0,max(behmat$time), by = n), dig.lab=10)
+  behmat$bin<- cut(behmat$time, seq(0,max(behmat$time), by = bins), dig.lab=10)
   behmat$omR[behmat$state == 5] <- 1 ## omega reverse = 1 for glm
   behmat$omR[is.na(behmat['omR'])]<-0 ## all else = 0
   behmat$omF[behmat$state == 6] <- 1 ## omega forward = 1 for glm

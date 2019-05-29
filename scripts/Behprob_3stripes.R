@@ -1,3 +1,4 @@
+library(tidyverse)
 library(reshape2)
 library(ggplot2)
 library(stats)
@@ -7,8 +8,9 @@ library(splines)
 library(scales)
 library(tcltk)
 library(devtools)
-install('~/GitHub/wormTracker/R_packages/MF.matR')
+#devtools::install_github('SenguptaLab/MF.matR')
 library(MF.matR)
+
 
 
 

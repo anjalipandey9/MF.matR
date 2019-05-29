@@ -1,14 +1,15 @@
 #' dir_mat melt function
 #' Takes a matlab dirmat file and converts it to long format
 #'
-#' @param n number of time frames to bin. generally 400 for 20 minute video is standard
+#' @param bins number of time frames to bin. generally 400 for 20 minute video is standard
 #' @export
 #' @examples
 #' dir_mat()
 
-dir_mat <- function (n) {
-  environment<-globalenv()
-  dirmat<-read.csv(tk_choose.files(caption = "Choose dirmat file"))
+dir_mat <- function (bins) {
+  #environment<-globalenv()
+  message("Choose dirmmat file")
+  dirmat<-read.csv(file.choose())
   id.cols<-c(colnames(dirmat[1:(length(dirmat)-2400)])) # identify all non time columns
   dirmat[, id.cols] <- lapply(dirmat[,id.cols], factor) # convert all ID columns to factors
   dirmat<-melt(dirmat, id.vars=id.cols) # convert to long format

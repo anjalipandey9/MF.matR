@@ -5,10 +5,10 @@
 \title{dir_mat melt function
 Takes a matlab dirmat file and converts it to long format}
 \usage{
-dir_mat(n)
+dir_mat(bins)
 }
 \arguments{
-\item{n}{number of time frames to bin. generally 400 for 20 minute video is standard}
+\item{bins}{number of time frames to bin. generally 400 for 20 minute video is standard}
 }
 \description{
 dir_mat melt function

@@ -8,10 +8,10 @@ make a merged behavioral state object incorporating direction, position and stat
 about each worm from Matlab tracking. Requires beh_mat, y_mat, and dir_mat to be defined by installing MF.matR package.
 also required reshape2, tcl/tk and dplyr packages installed}
 \usage{
-beh_merge_all(n)
+beh_merge_all(bins)
 }
 \arguments{
-\item{n}{number of time frames to bin. generally 400 for 20 minute video is standard}
+\item{bins}{number of time frames to bin. generally 400 for 20 minute video is standard}
 }
 \description{
 beh_merge_all function

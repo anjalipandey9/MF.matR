@@ -21,7 +21,9 @@ Imports:
     R.matlab,
     ggrepel,
     tidyverse,
-    purrr
+    purrr,
+    remotes,
+    ArgumentCheck
 Remotes:
     thomasp85/patchwork
 License: What license is it under?
