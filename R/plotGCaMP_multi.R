@@ -9,7 +9,7 @@
 #' Requires max_delta helper function
 #' time etc...
 #' @param FileFilter string to search/subset filenames
-#' @param matlab whether to use matfiles or data from ImageJ quantification. Defaults to TRUE (matfiles)
+#' @param matlab whether to use matfiles or data from ImageJ quantification. Defaults to FALSE (matfiles)
 #' @param genotype label the genotype for these data
 #' @param cue label the stimulus cue.
 #' @param food label to food cue
