@@ -149,6 +149,19 @@ plotGCaMP_multi <- function(FileFilter,
                        food = food,
                        neuron = neuron)
 
+ #check for same length viedo files:
+   Check2 <- ArgumentCheck::newArgCheck()
+
+  if (data %>% unnest() %>% group_by(animal) %>% tally() %$% unique(n) %>% length() != 1) {
+    ArgumentCheck::addError(
+      msg = print(c("One or more of your video files are of different length, check these files:",
+                    data %>% unnest() %>% group_by(animal) %>% tally() %>% filter(n < max(n)) %>% select(animal))),
+      argcheck = Check2)
+  }
+
+  #* Return errors and warnings (if any)
+  ArgumentCheck::finishArgCheck(Check2)
+
 
   #### recenter mean values ####
   if(center_on_pulse == "OFF") {
@@ -228,7 +241,7 @@ plotGCaMP_multi <- function(FileFilter,
   if(!is.numeric(heatmap_limits)) { # using auto calc unless a numeric vector input
     breaks <- round(
       data %>% unnest %$% quantile(delF, c(0.05, 0.5, 0.99)),
-      1
+      2
     )
     labels <- as.character(breaks)
     limits <- breaks[c(1,3)]
