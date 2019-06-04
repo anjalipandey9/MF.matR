@@ -13,7 +13,7 @@ plotGCaMP_multi(FileFilter, matlab = FALSE, genotype = genotype,
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
 
-\item{matlab}{whether to use matfiles or data from ImageJ quantification. Defaults to TRUE (matfiles)}
+\item{matlab}{whether to use matfiles or data from ImageJ quantification. Defaults to FALSE (matfiles)}
 
 \item{genotype}{label the genotype for these data}
 
