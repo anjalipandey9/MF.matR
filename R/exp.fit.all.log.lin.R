@@ -44,10 +44,10 @@ exp.fit.all.log.lin <- function(filename,
       fit1 <- lm(data = df[c(skip.time:startPulse*4, (endPulse*4 + 40):nrow(df)), ], signal ~ log(time))
       correction <- "log"
     } else {
-      fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time) + time) # plus last 15s
+      fit1 <- lm(data = df[c(skip.time:120, (nrow(df)-60):nrow(df)), ], signal ~ log(time) + time) # plus last 15s
       correction <- "log+linear"
       if(fit1$coefficients[2] > 0) {
-        fit1 <- lm(data = df[c(skip.time:120, 300:360), ], signal ~ log(time))
+        fit1 <- lm(data = df[c(skip.time:120, (nrow(df)-60):nrow(df)), ], signal ~ log(time))
         correction <- "log"
       }
     }

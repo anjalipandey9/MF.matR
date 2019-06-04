@@ -228,7 +228,7 @@ plotGCaMP_multi <- function(FileFilter,
   if(!is.numeric(heatmap_limits)) { # using auto calc unless a numeric vector input
     breaks <- round(
       data %>% unnest %$% quantile(delF, c(0.05, 0.5, 0.99)),
-      1
+      2
     )
     labels <- as.character(breaks)
     limits <- breaks[c(1,3)]
