@@ -149,6 +149,19 @@ plotGCaMP_multi <- function(FileFilter,
                        food = food,
                        neuron = neuron)
 
+ #check for same length viedo files:
+   Check2 <- ArgumentCheck::newArgCheck()
+
+  if (data %>% unnest() %>% group_by(animal) %>% tally() %$% unique(n) %>% length() != 1) {
+    ArgumentCheck::addError(
+      msg = print(c("One or more of your video files are of different length, check these files:",
+                    data %>% unnest() %>% group_by(animal) %>% tally() %>% filter(n < max(n)) %>% select(animal))),
+      argcheck = Check2)
+  }
+
+  #* Return errors and warnings (if any)
+  ArgumentCheck::finishArgCheck(Check2)
+
 
   #### recenter mean values ####
   if(center_on_pulse == "OFF") {
