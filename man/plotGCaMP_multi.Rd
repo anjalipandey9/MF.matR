@@ -8,7 +8,7 @@ plotGCaMP_multi(FileFilter, matlab = FALSE, genotype = genotype,
   cue = cue, food = OP50, startPulse = 29.5, endPulse = 59.5,
   center_on_pulse = "none", show.plots = TRUE, use.Fmax = FALSE,
   neuron = GCAMP, linear = FALSE, nls = TRUE, backsub = FALSE,
-  plot.raw = FALSE, heatmap_limits = "auto", folderPath, ...)
+  exp.fit = FALSE, heatmap_limits = "auto", folderPath, ...)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
@@ -39,7 +39,7 @@ plotGCaMP_multi(FileFilter, matlab = FALSE, genotype = genotype,
 
 \item{backsub}{do you want to subtract background ie subtract ROI of background from the mean cell ROI? Defaults to TRUE}
 
-\item{plot.raw}{do you want to use raw deltaF/F values - ie not exponentially corrected? Defaults to FALSE}
+\item{exp.fit}{do you want to use raw deltaF/F values - ie exponentially corrected? Defaults to TRUE, which means it will be corrected}
 
 \item{heatmap_limits}{optional 3-value vector defining the color scale and y axis limits, ie c(-1,0,2)}
 
