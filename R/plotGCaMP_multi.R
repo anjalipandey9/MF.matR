@@ -25,7 +25,7 @@
 #' @param heatmap_limits optional 3-value vector defining the color scale and y axis limits, ie c(-1,0,2)
 #' @param folderpath user supplied path for recursive file search. If missing, it will prompt for a fiel selection.
 #' @param backsub do you want to subtract background ie subtract ROI of background from the mean cell ROI? Defaults to TRUE
-#' @param plot.raw do you want to use raw deltaF/F values - ie not exponentially corrected? Defaults to FALSE
+#' @param exp.fit do you want to use raw deltaF/F values - ie exponentially corrected? Defaults to TRUE, which means it will be corrected
 #'
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
@@ -47,7 +47,7 @@ plotGCaMP_multi <- function(FileFilter,
                             linear = FALSE,
                             nls = TRUE,
                             backsub = FALSE,
-                            plot.raw = FALSE,
+                            exp.fit = FALSE,
                             heatmap_limits = "auto",
                             folderPath,
                             ...) {
@@ -251,7 +251,7 @@ plotGCaMP_multi <- function(FileFilter,
     limits <- breaks[c(1,3)]
   }
 
-if(plot.raw == FALSE) {
+if(exp.fit == FALSE) {
   plot1 <- data %>% unnest() %>%
     ggplot(aes(x = time, y = delF)) +
     geom_line(aes(group = animal), alpha = 0.1) +
