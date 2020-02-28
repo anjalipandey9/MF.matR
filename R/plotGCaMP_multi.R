@@ -141,7 +141,7 @@ plotGCaMP_multi <- function(FileFilter,
   }
 
 
-  data %<>% data_frame(data = .,
+  data %<>% tibble(data = .,
                        animal = filenames,
                        animal_num = factor(seq(from = 1, to = length(filenames))),
                        genotype = genotype,
@@ -152,10 +152,10 @@ plotGCaMP_multi <- function(FileFilter,
  #check for same length viedo files:
    Check2 <- ArgumentCheck::newArgCheck()
 
-  if (data %>% unnest() %>% group_by(animal) %>% tally() %$% unique(n) %>% length() != 1) {
+  if (data %>% unnest(cols = c(data)) %>% group_by(animal) %>% tally() %$% unique(n) %>% length() != 1) {
     ArgumentCheck::addError(
       msg = print(c("One or more of your video files are of different length, check these files:",
-                    data %>% unnest() %>% group_by(animal) %>% tally() %>% filter(n < max(n)) %>% select(animal))),
+                    data %>% unnest(cols = c(data)) %>% group_by(animal) %>% tally() %>% filter(n < max(n)) %>% select(animal))),
       argcheck = Check2)
   }
 
@@ -166,14 +166,14 @@ plotGCaMP_multi <- function(FileFilter,
   #### recenter mean values ####
   if(center_on_pulse == "OFF") {
 
-    means <- data %>% unnest %>%
+    means <- data %>% unnest(cols = c(data)) %>%
       group_by(animal) %>%
       filter(time > (startPulse+endPulse)/2 & time < endPulse) %>%
       summarise(mean_pulse_delF = mean(delF))
 
     data <- left_join(data, means, by = "animal")
 
-    data %<>% unnest %>%
+    data %<>% unnest(cols = c(data)) %>%
       group_by(animal, animal_num) %>%
       mutate(delF = delF - mean_pulse_delF) %>%
       nest()
@@ -181,14 +181,14 @@ plotGCaMP_multi <- function(FileFilter,
 
   if(center_on_pulse == "ON") {
 
-    means <- data %>% unnest %>%
+    means <- data %>% unnest(cols = c(data)) %>%
       group_by(animal) %>%
       filter(time > startPulse/2 & time < startPulse) %>%
       summarise(mean_pulse_delF = mean(delF))
 
     data <- left_join(data, means, by = "animal")
 
-    data %<>% unnest %>%
+    data %<>% unnest(cols = c(data)) %>%
       group_by(animal,animal_num) %>%
       mutate(delF = delF - mean_pulse_delF) %>%
       nest()
@@ -197,9 +197,10 @@ plotGCaMP_multi <- function(FileFilter,
   #### arrange heat map settings ####
 
   if(center_on_pulse == "OFF") {
+    message("centering on OFF response")
     plot_order <- data %>%
-      unnest() %>%
-      group_by(animal, animal_num) %>%
+      unnest(cols = c(data)) %>%
+      group_by(animal, animal_num, .drop = TRUE) %>%
       summarise(maxD = max_delta(delF, end = endPulse)) %>%
       arrange(maxD)
 
@@ -209,9 +210,9 @@ plotGCaMP_multi <- function(FileFilter,
   }
 
   if(center_on_pulse %in% c("ON", "none")) {
-    plot_order <- data %>%
-      unnest() %>%
-      group_by(animal, animal_num) %>%
+    message("centering on ON response")
+    plot_order <- data %>% unnest(cols = c(data)) %>%
+      group_by(animal, animal_num, .drop = TRUE) %>%
       summarise(maxD = max_delta(delF, end = startPulse)) %>%
       arrange(maxD)
 
@@ -221,13 +222,13 @@ plotGCaMP_multi <- function(FileFilter,
   }
 
   if(use.Fmax == TRUE) {
-    range <- data %>% unnest %>%
+    range <- data %>% unnest(cols = c(data)) %>%
       group_by(animal) %>%
       summarise(max_delF = max(delF), Fo = quantile(delF, 0.05))
 
     data <- full_join(data, range)
 
-    data %<>% unnest %>%
+    data %<>% unnest(cols = c(data)) %>%
       group_by(animal,animal_num) %>%
       mutate(delF = (delF - Fo) / (max_delF - Fo)) %>%
       nest()
@@ -240,7 +241,7 @@ plotGCaMP_multi <- function(FileFilter,
 
   if(!is.numeric(heatmap_limits)) { # using auto calc unless a numeric vector input
     breaks <- round(
-      data %>% unnest %$% quantile(delF, c(0.05, 0.5, 0.99)),
+      data %>% unnest(cols = c(data)) %$% quantile(delF, c(0.05, 0.5, 0.99)),
       2
     )
     labels <- as.character(breaks)
@@ -252,7 +253,7 @@ plotGCaMP_multi <- function(FileFilter,
   }
 
 if(exp.fit == FALSE) {
-  plot1 <- data %>% unnest() %>%
+  plot1 <- data %>% unnest(cols = c(data)) %>%
     ggplot(aes(x = time, y = delF)) +
     geom_line(aes(group = animal), alpha = 0.1) +
     geom_smooth(method = "loess", span = 0.05) +
@@ -278,7 +279,7 @@ if(exp.fit == FALSE) {
           axis.title.x = element_blank())
 
   plot2 <-  full_join(data, plot_order) %>%
-    unnest() %>%
+    unnest(cols = c(data)) %>%
     group_by(animal_num) %>%
     ggplot(aes(x = time, y = fct_reorder(animal_num, maxD))) +
     geom_tile(aes(fill = delF)) +
@@ -293,7 +294,7 @@ if(exp.fit == FALSE) {
           axis.text.y = element_blank()) +
     labs(y = "Animal number")
 } else {
-  plot1 <- data %>% unnest() %>%
+  plot1 <- data %>% unnest(cols = c(data)) %>%
     ggplot(aes(x = time, y = signal)) +
     geom_line(aes(group = animal), alpha = 0.1) +
     geom_smooth(method = "loess", span = 0.05) +
@@ -319,7 +320,7 @@ if(exp.fit == FALSE) {
           axis.title.x = element_blank())
 
   plot2 <-  full_join(data, plot_order) %>%
-    unnest() %>%
+    unnest(cols = c(data)) %>%
     group_by(animal_num) %>%
     ggplot(aes(x = time, y = fct_reorder(animal_num, maxD))) +
     geom_tile(aes(fill = signal)) +
@@ -345,7 +346,7 @@ if(exp.fit == FALSE) {
     ggsave(plots, filename = file.path(folderPath,paste0(genotype,"_",cue,"_",neuron,"_",food,"_plots.png")),
            width = 11, height = 8.5, units = "in")
   }
-  write_csv(unnest(data), path = file.path(folderPath,paste0(genotype,"_",cue,"_",neuron,"_",food,"_rawdata.csv")))
+  write_csv(unnest(data, cols = c(data)), path = file.path(folderPath,paste0(genotype,"_",cue,"_",neuron,"_",food,"_rawdata.csv")))
 
 
   return(list(data = dplyr::full_join(data, plot_order), plot = plots))
