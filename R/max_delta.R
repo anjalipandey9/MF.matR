@@ -19,12 +19,12 @@ max_delta <- function(x, end = 60) {
   #
 
   # new version:
-  max <- max(x[(end*4):(end*4 + 20)]) - mean(x[(end*4 - 10):(end*4)])
-  min <- min(x[(end*4):(end*4 + 20)]) - mean(x[(end*4 - 10):(end*4)])
-  if(abs(max) > abs(min)) {
-    return(max)
+  maxval <- max(x[(end*4):(end*4 + 20)]) - mean(x[(end*4 - 10):(end*4)])
+  minval <- min(x[(end*4):(end*4 + 20)]) - mean(x[(end*4 - 10):(end*4)])
+  if(abs(maxval) > abs(minval)) {
+    return(maxval)
   } else {
-    return(min)
+    return(minval)
   }
 
 }
