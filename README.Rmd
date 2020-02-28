@@ -20,6 +20,31 @@ This is a repository of tools to be used for analysis of <i>C. elegans</i> behav
 
 ## Installation
 
+
+To use auto registration functions (if you have git set up),
+open a Terminal session, and copy/paste or type:
+
+`mkdir ~/git/projects && cd ~/git/projects`
+
+Then paste: 
+
+`git clone https://github.com/SenguptaLab/MF.matR.git`
+
+This will install the latest version of this repository, which you can keep up do date with:
+
+`cd MF.matR && git pull`
+
+Now for each terminal session from within this directory you need to source 1 bash function to make
+registration useable:
+
+`source ./install_registration.sh`
+
+Alternatively, you can add this to your .bash_profile to avoid doing this every session
+
+Now you change directory to the folder of videos you'd like to register, then type
+
+`register`
+
 You can install the recent version of MF.matR from github with:
 
 ``` {r, message = FALSE, warning = FALSE}
