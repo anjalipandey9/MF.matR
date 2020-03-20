@@ -1,7 +1,10 @@
 ---
-output: github_document
+output: 
+  github_document:
+    toc: true
+    toc_depth: 2
 fig_width: 6 
-fig_height: 4 
+fig_height: 4
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -14,6 +17,7 @@ knitr::opts_chunk$set(
   out.width = "100%"
 )
 ```
+
 # MF.matR
 
 This is a repository of tools to be used for analysis of <i>C. elegans</i> behavioral  and calcium imaging data. It's a work in progress intened to mate matlab and R functions.
@@ -47,7 +51,7 @@ Now you change directory to the folder of videos you'd like to register, then ty
 
 You can install the recent version of MF.matR from github with:
 
-``` {r, message = FALSE, warning = FALSE}
+``` {r, message = FALSE, warning = FALSE, eval = FALSE}
 devtools::install_github("SenguptaLab/MF.matR")
 ```
 
