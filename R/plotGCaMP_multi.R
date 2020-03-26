@@ -19,7 +19,7 @@
 #' 'OFF' = Bring values to mean delF of 2nd half of pulse duration, order by OFF responses
 #' 'ON' = Bring values to mean delF of 2nd half pre-pulse duration, order by ON responses
 #' @param show.plots render plots for baseline correction - defaults to TRUE
-#' @param use.Fmax normalize amplitude to 1
+#' @param use.Fmax normalize all amplitudes to within 0-1
 #' @param neuron neuron being analyzed
 #' @param linear optional argument piped into exp.fit.all.log.lin include a linear term in the fit?
 #' @param heatmap_limits optional 3-value vector defining the color scale and y axis limits, ie c(-1,0,2)
