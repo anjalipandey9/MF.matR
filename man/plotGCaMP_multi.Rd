@@ -4,11 +4,26 @@
 \alias{plotGCaMP_multi}
 \title{plotGCaMP_multi}
 \usage{
-plotGCaMP_multi(FileFilter, matlab = FALSE, genotype = genotype,
-  cue = cue, food = OP50, startPulse = 29.5, endPulse = 59.5,
-  center_on_pulse = "none", show.plots = TRUE, use.Fmax = FALSE,
-  neuron = GCAMP, linear = FALSE, nls = TRUE, backsub = FALSE,
-  exp.fit = FALSE, heatmap_limits = "auto", folderPath, ...)
+plotGCaMP_multi(
+  FileFilter,
+  matlab = FALSE,
+  genotype = genotype,
+  cue = cue,
+  food = OP50,
+  startPulse = 29.5,
+  endPulse = 59.5,
+  center_on_pulse = "none",
+  show.plots = TRUE,
+  use.Fmax = FALSE,
+  neuron = GCAMP,
+  linear = FALSE,
+  nls = TRUE,
+  backsub = FALSE,
+  exp.fit = FALSE,
+  heatmap_limits = "auto",
+  folderPath,
+  ...
+)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
@@ -31,7 +46,7 @@ plotGCaMP_multi(FileFilter, matlab = FALSE, genotype = genotype,
 
 \item{show.plots}{render plots for baseline correction - defaults to TRUE}
 
-\item{use.Fmax}{normalize amplitude to 1}
+\item{use.Fmax}{normalize all amplitudes to within 0-1}
 
 \item{neuron}{neuron being analyzed}
 

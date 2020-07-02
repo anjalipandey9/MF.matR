@@ -36,7 +36,8 @@ Import.WL.data <- function(bin.length = 4, frame.rate, num.tracks, multiple, hea
   speed.path <- file.path(folder, file_list[grep("peed.csv",file_list)])
   length.path <- file.path(folder, file_list[grep("ength.csv",file_list)])
   width.path <- file.path(folder, file_list[grep("idth.csv",file_list)])
-  omega.path <- file.path(folder, file_list[grep("megaBend.csv",file_list)])
+  omega.path <- file.path(folder, file_list[grep("mega",file_list)])
+
 
   message("loading in data")
   print(position.path)

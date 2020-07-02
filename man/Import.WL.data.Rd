@@ -5,8 +5,14 @@
 \title{Import Wormlab data, merge and convert to long format with curve angle.
 plus it assigns binary state columns to each behavioral state class -work in progress-}
 \usage{
-Import.WL.data(bin.length = 4, frame.rate, num.tracks, multiple,
-  head.correct = FALSE, ...)
+Import.WL.data(
+  bin.length = 4,
+  frame.rate,
+  num.tracks,
+  multiple,
+  head.correct = FALSE,
+  ...
+)
 }
 \arguments{
 \item{bin.length}{length of time bins in seconds. Used for state analysis}

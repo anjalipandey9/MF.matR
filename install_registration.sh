@@ -17,4 +17,4 @@ echo -e "${RED} Your MF.matR clone is installed locally in${NC} $DIR\n"
 	register() {
 		$DIR/register_auto.sh "$@"
 	}
-	export -f register
+	export -f register_auto
