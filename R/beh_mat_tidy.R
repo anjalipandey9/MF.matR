@@ -8,14 +8,29 @@
 #' beh_mat_tidy
 
 
-beh_mat_tidy <- function(bins, frames) {
-  message("Choose behmat file")
-  behmat<-readr::read_csv(file.choose()) %>%
-    tidyr::gather(key = "time", value = "state", tidyselect::starts_with("t")) %>% #put all data columns (time = "t1 ... "t2400") into long format
-   dplyr::mutate(
-  time = as.numeric(gsub("[^0-9]", "", time)),
-  wormID = interaction(genotype, exp, condition, animal),
-  state_name = dplyr::case_when(
+beh_mat_tidy <- function(bins, frames, interactive = TRUE) {
+  if(interactive) {
+    message("Choose behmat file")
+    behmat<-readr::read_csv(file.choose(), col_names = FALSE)
+    message("choose ExpInfo file")
+    ExpInfo <- readr::read_csv(file.choose(), col_names = TRUE)
+  } else {
+    behPath <- fs::dir_ls(folder, regex = "behmat")
+    ExpInfoPath <- fs::dir_ls(folder, regex = "Expinfo")
+    behmat <- readr::read_csv(behPath, col_names = FALSE)
+    ExpInfo <- readr::read_csv(ExpInfoPath, col_names = TRUE)
+  }
+
+  behmat<- ExpInfo %>%
+    mutate(date = factor(date)) %>%
+      expand_grid(., behmat) %>%
+    mutate(worm = factor(seq(1:nrow(behmat))))
+  behmat <- behmat %>% tidyr::gather(key = "time",
+                           value = "state",
+                           tidyselect::starts_with("X")) %>% #put all data columns (time = "t1 ... "t2400") into long format
+   dplyr::mutate(time = as.numeric(gsub("[^0-9]", "", time)),
+                 wormID = interaction(date, genotype, experimentNum, stimulus, condition, worm),
+                 state_name = dplyr::case_when(
     #!state %in% c(1:8) ~ "NA",
     state == "1" ~ "Forward",
     state == "2" ~ "Curve",

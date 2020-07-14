@@ -7,7 +7,7 @@ WL.pos.data <- function(bin.length, frame.rate, num.tracks) {
   library(tidyr)
   library(reshape2)
   library(viridis)
-  library(plotly)
+  #library(plotly)
 
   #### import data ### - use  readr to improve speed
   message("Choose position data")

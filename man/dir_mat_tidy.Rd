@@ -5,7 +5,7 @@
 \title{dir_mat_tidy melt function
 Takes a matlab-derived dirmat .csv file and converts it to long format}
 \usage{
-dir_mat_tidy()
+dir_mat_tidy(interactive = TRUE)
 }
 \description{
 dir_mat_tidy melt function

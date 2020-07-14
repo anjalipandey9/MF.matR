@@ -4,8 +4,7 @@
 \alias{Prism_scatter}
 \title{Prism_scatter}
 \usage{
-Prism_scatter(data, xval, yval, facet, color_var, shape, ncolors, nbreaks,
-  ...)
+Prism_scatter(data, xval, yval, facet, color_var, shape, ncolors, nbreaks, ...)
 }
 \arguments{
 \item{data}{input dataset}

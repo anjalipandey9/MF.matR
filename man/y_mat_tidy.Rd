@@ -5,7 +5,7 @@
 \title{y_mat_tidy data munge
 Takes a matlab ymat file and converts it to long format for further analysis}
 \usage{
-y_mat_tidy()
+y_mat_tidy(interactive = TRUE)
 }
 \arguments{
 \item{bins}{number of time frames to bin. generally 400 for 20 minute video is standard}
