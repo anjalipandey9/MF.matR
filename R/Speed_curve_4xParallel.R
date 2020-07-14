@@ -11,7 +11,7 @@
 
 
 
-Speed_curve_4xParallel <- function(bin.length = 10, ...) {
+Speed_curve_4xParallel <- function(bin.length = 10, frame.rate, ...) {
 
 packages = c("ggplot2","dplyr","tidyr","reshape2","viridis","plotly", "magrittr", "pryr", "devtools", "data.table")
 package.check <- lapply(packages, FUN = function(x) {
@@ -35,14 +35,14 @@ folder.list <- list.dirs(dirname(file.choose()), recursive = FALSE)
 print(folder.list)
 directory <- getwd()
 # Calculate the number of cores
-no_cores <- min(detectCores() - 2,4) # uses a ton of RAM right now
+no_cores <- min(detectCores() - 2,7) # uses a ton of RAM right now
 #bin.length <- 4
 
 message("setting up clusters for parallel analysis")
 
 # Initiate cluster
 cl <- makeCluster(no_cores)
-clusterExport(cl=cl, varlist = c("folder.list", "directory", "bin.length"), envir = environment())
+clusterExport(cl=cl, varlist = c("folder.list", "directory", "bin.length", "frame.rate"), envir = environment())
 library(lineprof)
 
 # change num.tracks
@@ -57,11 +57,11 @@ system.time(
     speed.path <- file.path(folder,list.files(path = file.path(folder),pattern = c("peed",".csv")))
     message("speed data ok")
     #bin.length <- bin.length
-    frame.rate <- 4
+    frame.rate <- frame.rate
     time <- 5400
     xend <- 100
     yend <- 200
-    slope <- 200/100
+    slope <- yend/xend
     library(ggplot2)
     library(dplyr)
     library(tidyr)
@@ -144,18 +144,24 @@ system.time(
       WL.alldata %<>% group_by(worm) %>%
         mutate(track.frame = row_number()) %>% # make 'track.frame' variable, = count every 30 frames by track
         mutate(time.bin = ceiling(track.frame/bin.size)) %>% # round up to integer ie 0.1 = 1, 1.1 = 2
-        mutate(del.y2 =  y - lag(y), # change from previous point (t-1) to (t0)
+        mutate(del.y2 = y - lag(y), # change from previous point (t-1) to (t0)
                del.x2 = x - lag(x),
-               del.x1 = lag(x) - lag(x, n=2), #vector from t(-2) to t(-1) for curve angle
-               del.y1 = lag(y) - lag(y, n=2),
-               curve.ang = as.numeric(mapply(curve.angle, del.x1, del.y1, del.x2, del.y2))*180/pi) %>% group_by(worm, time.bin) %>%
-        mutate(bin.speed = abs(mean(speed, na.rm=TRUE)), bin.ang.vel = mean(curve.ang, na.rm=TRUE)) %>% filter(!is.na(curve.ang))
+               del.x1 = lag(x) - lag(x, n = 2), #vector from t(-2) to t(-1) for curve angle
+               del.y1 = lag(y) - lag(y, n = 2),
+               curve.ang = as.numeric(mapply(curve.angle, del.x1, del.y1, del.x2, del.y2))*180/pi,
+               man.speed = sqrt(del.x2^2 + del.y2^2) * (frame.rate/2)) %>%
+               #curve.ang = (abs(angle - lag(angle))*180/pi) * frame.rate) %>%
+        group_by(worm, time.bin) %>%
+        mutate(bin.speed = mean(abs(speed), na.rm=TRUE),
+               bin.ang.vel = mean(curve.ang, na.rm=TRUE),
+               bin.speed.man = mean(man.speed, na.rm = TRUE)) %>%
+        filter(!is.na(curve.ang))
       ###################################
 
       return(WL.alldata)
     }
     plot_density <- function(data, xend, yend) {
-      truncated <- data %>% group_by(worm) %>% summarise(n = n()) %>% dplyr::filter(n<10)
+      truncated <- data %>% group_by(worm) %>% summarise(n = n()) %>% dplyr::filter(n<bin.length)
       data[!data$worm %in% truncated$worm,] %>% group_by(worm,time.bin) %>%
         dplyr::filter(bin.speed < 500) %>%
         summarize(mean.speed = mean(bin.speed),mean.angle = mean(bin.ang.vel)) %>%
@@ -167,6 +173,21 @@ system.time(
         coord_cartesian(xlim = c(0,150),ylim = c(0,250)) +
         geom_segment(aes(x=0, y=0, xend = xend, yend = yend), colour = "red") + theme_classic()
     }
+
+    plot_density_man <- function(data, xend, yend) {
+      truncated <- data %>% group_by(worm) %>% summarise(n = n()) %>% dplyr::filter(n<bin.length)
+      data[!data$worm %in% truncated$worm,] %>% group_by(worm,time.bin) %>%
+        dplyr::filter(bin.speed.man < 500) %>%
+        summarize(mean.speed.man = mean(bin.speed.man), mean.angle = mean(bin.ang.vel)) %>%
+        ggplot(aes(x = mean.angle, y = mean.speed.man)) +
+        stat_density2d(geom="raster", aes(fill = ..density..), contour = FALSE)  +
+        viridis::scale_fill_viridis(option = "inferno", begin = 0.05, end = 0.9) +
+        labs(title = "Density plot") +
+        #geom_point(alpha = 0.1) +
+        coord_cartesian(xlim = c(0,150),ylim = c(0,250)) +
+        geom_segment(aes(x=0, y=0, xend = xend, yend = yend), colour = "red") + theme_classic()
+    }
+
     plot_tracks <- function(data, time) {
       data %>% dplyr::filter(Time < time, bin.ang.vel < 150) %>%
         ggplot(aes(x = x, y = y)) +
@@ -181,7 +202,7 @@ system.time(
         summarize(mean.speed = mean(bin.speed),mean.angle = mean(bin.ang.vel)) %>%
         ggplot(aes(x = mean.angle, y = mean.speed)) +
         labs(title = "Scatter plot by time bin") +
-        geom_point(alpha = 0.1) +
+        geom_point(alpha = 0.05) +
         coord_cartesian(xlim = c(0,150),ylim = c(0,250)) +
         geom_segment(aes(x=0, y=0, xend = xend, yend = yend), colour = "red") + theme_classic()
     }
@@ -209,7 +230,8 @@ system.time(
     plot_all_vect <- function(folder,data, time, xend, yend) {
       p1 <- plot_density(data, xend, yend)
       p2 <- plot_scatter(data, xend, yend)
-      p3 <- plot_position_changes(data)
+      p3 <- plot_density_man(data, xend, yend)
+      #p3 <- plot_position_changes(data)
       p4 <- plot_tracks(data, time)
       p<-gridExtra::grid.arrange(p1,p2,p3,p4, ncol = 2, nrow =2)
       ggsave(p, filename =file.path(folder,"plots.pdf"), width = 11, height = 8.5, units = "in",device = "pdf")
@@ -217,16 +239,16 @@ system.time(
 
     #### fxn to get pct roam ####
     roam.pct <- function(data, slope) {
-      truncated <- data %>% group_by(worm) %>% summarise(n = n()) %>% dplyr::filter(n<10)
+      truncated <- data %>% group_by(worm) %>% summarise(n = n()) %>% dplyr::filter(n<bin.length)
       roam <- data[!data$worm %in% truncated$worm,] %>% group_by(worm,time.bin) %>%
-        summarize(mean.speed = mean(bin.speed),mean.angle = mean(bin.ang.vel)) %>%
+        summarize(mean.speed = mean(bin.speed.man),mean.angle = mean(bin.ang.vel)) %>%
         mutate(ratio = mean.speed/mean.angle) %>% dplyr::filter(ratio >= slope) %>% nrow()
       dwell <- data[!data$worm %in% truncated$worm,] %>% group_by(worm,time.bin) %>%
-        summarize(mean.speed = mean(bin.speed),mean.angle = mean(bin.ang.vel)) %>%
+        summarize(mean.speed = mean(bin.speed.man),mean.angle = mean(bin.ang.vel)) %>%
         mutate(ratio = mean.speed/mean.angle) %>% dplyr::filter(ratio < slope) %>% nrow()
       pct.roam <- roam/(dwell+roam)
       print(pct.roam)
-      return(data.frame(roam = roam, dwell = dwell, pct.roam = pct.roam))
+      return(data.frame(ID = folder, roam = roam, dwell = dwell, pct.roam = pct.roam))
     }
 
 

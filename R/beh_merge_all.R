@@ -12,7 +12,7 @@
 beh_merge_all <- function(bins) {
   behmat<-MF.matR::beh_mat(bins)
   vid.time <- as.numeric(gsub("[^0-9]","", behmat$variable))
-  ymat<-MF.matR::y_mat(bins, time)
+  ymat<-MF.matR::y_mat_tidy(bins)
   dirmat<-MF.matR::dir_mat(bins)
   tot.mat<-left_join(behmat, ymat)
   tot.mat<-left_join(tot.mat, dirmat)

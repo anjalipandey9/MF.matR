@@ -5,7 +5,7 @@
 \title{Speed_curve_4xParallel
 roam/dwell test using wormlab data}
 \usage{
-Speed_curve_4xParallel(bin.length = 10, ...)
+Speed_curve_4xParallel(bin.length = 10, frame.rate, ...)
 }
 \arguments{
 \item{bin.length}{length of time bins in seconds. Used for state analysis}

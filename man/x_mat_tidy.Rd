@@ -3,16 +3,16 @@
 \name{x_mat_tidy}
 \alias{x_mat_tidy}
 \title{x_mat_tidy data munge
-Takes a matlab ymat file and converts it to long format for further analysis}
+Takes a matlab xmat file and converts it to long format for further analysis}
 \usage{
-x_mat_tidy()
+x_mat_tidy(interactive = TRUE)
 }
 \arguments{
 \item{bins}{number of time frames to bin. generally 400 for 20 minute video is standard}
 }
 \description{
 x_mat_tidy data munge
-Takes a matlab ymat file and converts it to long format for further analysis
+Takes a matlab xmat file and converts it to long format for further analysis
 }
 \examples{
 x_mat_tidy()
