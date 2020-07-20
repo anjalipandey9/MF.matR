@@ -8,17 +8,19 @@
 #' beh_mat_tidy
 
 
-beh_mat_tidy <- function(bins, frames, interactive = TRUE) {
+beh_mat_tidy <- function(bins, frames, interactive = TRUE, folder = folder) {
   if(interactive) {
     message("Choose behmat file")
     behmat<-readr::read_csv(file.choose(), col_names = FALSE)
-    message("choose ExpInfo file")
+    message("Choose ExpInfo file")
     ExpInfo <- readr::read_csv(file.choose(), col_names = TRUE)
   } else {
     behPath <- fs::dir_ls(folder, regex = "behmat")
     ExpInfoPath <- fs::dir_ls(folder, regex = "Expinfo")
+    message("reading behmat file")
     behmat <- readr::read_csv(behPath, col_names = FALSE)
     ExpInfo <- readr::read_csv(ExpInfoPath, col_names = TRUE)
+    return(message("file reading complete"))
   }
 
   behmat<- ExpInfo %>%

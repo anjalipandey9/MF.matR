@@ -6,7 +6,7 @@
 Takes a matlab behmat file and converts it to long format
 plus it assigns binary state columns to each behavioral state class}
 \usage{
-beh_mat_tidy(bins, frames, interactive = TRUE)
+beh_mat_tidy(bins, frames, interactive = TRUE, folder = folder)
 }
 \arguments{
 \item{bins}{number of time frames to bin. generally 400 for 20 minute video is standard}
