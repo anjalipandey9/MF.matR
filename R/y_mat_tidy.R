@@ -7,8 +7,6 @@
 #' y_mat_tidy()
 
 y_mat_tidy <- function (interactive = TRUE) {
-  message("Choose ymat file")
-
 
   if(interactive) {
     message("Choose ymat file")
