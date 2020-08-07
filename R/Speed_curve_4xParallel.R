@@ -48,14 +48,12 @@ library(lineprof)
 # change num.tracks
 #prof <- lineprof(
 system.time(
-  #lapply(folder.list, function(folder,num.tracks) {
+  # lapply(folder.list, function(folder,num.tracks) {
   parLapply(cl,folder.list, function(folder,num.tracks) {
     position.path <- file.path(folder,list.files(path = file.path(folder),pattern = c("osition",".csv")))
     message("position data ok")
     direction.path <- file.path(folder,list.files(path = file.path(folder),pattern = c("irection",".csv")))
     message("direction data ok")
-    speed.path <- file.path(folder,list.files(path = file.path(folder),pattern = c("peed",".csv")))
-    message("speed data ok")
     #bin.length <- bin.length
     frame.rate <- frame.rate
     time <- 5400
@@ -70,8 +68,11 @@ system.time(
     ##### include functions: #####
     ######fxn to melt WL position data to long format:
     WL.pos.long <- function(data, num.tracks) {
-      subset.long <- data[,1:(num.tracks*2 + 2)] %>% melt(id.vars = c(1,2)) %>%
-        separate(variable, sep = "\\.", c("worm", "pos")) %>% dcast(Frame + Time + worm ~ pos)
+      subset.long <- data[,1:(num.tracks*2 + 2)] %>%
+        mutate_if(is.character, as.numeric) %>%
+        pivot_longer(-c(Frame, Time), values_to = 'pos') %>%
+        separate(name, sep = " ", into = c("worm", "axis")) %>%
+        pivot_wider(names_from = axis, values_from = pos)
       return(subset.long)
     }
     ######fxn to calculate 3 point curvature based on law of cosines:
@@ -93,16 +94,20 @@ system.time(
     }
 
     ######main fxn to analyze and plot the data
-    WL.roam.data.vectorized <- function(position.path, speed.path, direction.path, bin.length, frame.rate, num.tracks) {
+    WL.roam.data.vectorized <- function(position.path,
+                                        direction.path,
+                                        bin.length,
+                                        frame.rate,
+                                        num.tracks) {
 
       ####Setting up data#########
-      speed.data <-read.csv(speed.path, skip = 4)
+      direction <- readr::read_csv(direction.path, skip = 4)
       if(missing(num.tracks)) {
-        num.tracks <- length(speed.data) - 2
+        num.tracks <- length(direction) - 2
       } else {
         num.tracks = num.tracks
       }
-      vid.length <- max(speed.data$Frame)
+      vid.length <- max(direction$Frame)
       bin.length <- bin.length # bin length in s
       frame.rate <- frame.rate # usually 2 or 3 fps
       bin.size <- bin.length*frame.rate
@@ -110,38 +115,48 @@ system.time(
       ############################
 
       #### get speed data ####
-      WL.speed <- speed.data[,1:(num.tracks + 2)] %>%
-        melt(id.vars = c(1,2)) %>% dplyr::filter(!is.na(value)) %>%
-        separate(variable, sep = "\\.", c("worm", "stuffer")) %>% dplyr::select(-stuffer) %>%
-        rename(speed = value)
-      rm(speed.data)
+      # speed.data <-readr::read_csv(speed.path, skip = 4)
+      # WL.speed <- speed.data[,1:(num.tracks + 2)] %>%
+      #   melt(id.vars = c(1,2)) %>% dplyr::filter(!is.na(value)) %>%
+      #   separate(variable, sep = "\\.", c("worm", "stuffer")) %>% dplyr::select(-stuffer) %>%
+      #   rename(speed = value)
+      # rm(speed.data)
 
       #### get position data ##########
-      position <- read.csv(position.path, skip = 4)
+      position <- readr::read_csv(position.path, skip = 4)
       WL.centroid <- WL.pos.long(position, num.tracks) %>%
-        dplyr::filter(!is.na(x)) %>% mutate(type = "centroid")
+        dplyr::filter(!is.na(x)) %>%
+        mutate(type = "centroid")
       rm(position)
 
       #### get direction data ####
-      direction <- read.csv(direction.path, skip = 4)
+      # direction <- readr::read_csv(direction.path, skip = 4)
       WL.head.dir <- direction[,1:(num.tracks + 2)] %>%
-        melt(id.vars = c(1,2)) %>% dplyr::filter(!is.na(value)) %>%
-        separate(variable, sep = "\\.", c("worm", "stuffer")) %>% dplyr::select(-stuffer) %>%
-        rename(head.dir = value)
+        # melt(id.vars = c(1,2)) %>%
+        # dplyr::filter(!is.na(value)) %>%
+        # separate(variable, sep = "\\.", c("worm", "stuffer")) %>%
+        # dplyr::select(-stuffer) %>%
+        # rename(head.dir = value)
+        mutate_if(is.character, as.numeric) %>%
+        pivot_longer(-c(Frame, Time), names_to = 'worm', values_to = 'head.dir') %>%
+        dplyr::filter(!is.na(head.dir))
       rm(direction)
 
-
       #### merge data ####
-      WL.alldata <- dplyr::bind_cols(list(WL.centroid, WL.speed, WL.head.dir)) %>%
-        subset(., select=which(!duplicated(names(.))))
-      rm(WL.pos.long, WL.speed, WL.head.dir)
+      WL.alldata <- dplyr::bind_cols(list(WL.centroid, select(WL.head.dir, -c(1:3))))
+
+
+      rm(WL.centroid, WL.head.dir)
       # used bind_cols instead of merge or join to speed up
       # thus, cannot alter row ordering before this step.
 
       # WL.alldata <- list(WL.centroid,WL.speed,WL.head.dir) %>% combine() %>% arrange(worm, Time) %>% mutate(stuffer, = NULL) ### this takes longest
       #    Reduce(function(...) dplyr::full_join(...), .) #%>% arrange(worm, Time) %>% mutate(stuffer = NULL) ### this takes longest
       ##################################
-      WL.alldata %<>% group_by(worm) %>%
+      message("calculating speed and angular velocity")
+
+      alldata <- WL.alldata %>%
+        group_by(worm) %>%
         mutate(track.frame = row_number()) %>% # make 'track.frame' variable, = count every 30 frames by track
         mutate(time.bin = ceiling(track.frame/bin.size)) %>% # round up to integer ie 0.1 = 1, 1.1 = 2
         mutate(del.y2 = y - lag(y), # change from previous point (t-1) to (t0)
@@ -150,28 +165,13 @@ system.time(
                del.y1 = lag(y) - lag(y, n = 2),
                curve.ang = as.numeric(mapply(curve.angle, del.x1, del.y1, del.x2, del.y2))*180/pi,
                man.speed = sqrt(del.x2^2 + del.y2^2) * (frame.rate/2)) %>%
-               #curve.ang = (abs(angle - lag(angle))*180/pi) * frame.rate) %>%
         group_by(worm, time.bin) %>%
-        mutate(bin.speed = mean(abs(speed), na.rm=TRUE),
-               bin.ang.vel = mean(curve.ang, na.rm=TRUE),
+        mutate(bin.ang.vel = mean(curve.ang, na.rm=TRUE),
                bin.speed.man = mean(man.speed, na.rm = TRUE)) %>%
         filter(!is.na(curve.ang))
       ###################################
 
-      return(WL.alldata)
-    }
-    plot_density <- function(data, xend, yend) {
-      truncated <- data %>% group_by(worm) %>% summarise(n = n()) %>% dplyr::filter(n<bin.length)
-      data[!data$worm %in% truncated$worm,] %>% group_by(worm,time.bin) %>%
-        dplyr::filter(bin.speed < 500) %>%
-        summarize(mean.speed = mean(bin.speed),mean.angle = mean(bin.ang.vel)) %>%
-        ggplot(aes(x = mean.angle, y = mean.speed)) +
-        stat_density2d(geom="raster", aes(fill = ..density..), contour = FALSE)  +
-        viridis::scale_fill_viridis(option = "inferno", begin = 0.05, end = 0.9) +
-        labs(title = "Density plot") +
-        #geom_point(alpha = 0.1) +
-        coord_cartesian(xlim = c(0,150),ylim = c(0,250)) +
-        geom_segment(aes(x=0, y=0, xend = xend, yend = yend), colour = "red") + theme_classic()
+      #return(alldata)
     }
 
     plot_density_man <- function(data, xend, yend) {
@@ -198,8 +198,8 @@ system.time(
     plot_scatter <- function(data, xend, yend) {
       truncated <- data %>% group_by(worm) %>% summarise(n = n()) %>% dplyr::filter(n<10)
       data[!data$worm %in% truncated$worm,] %>% group_by(worm,time.bin) %>%
-        dplyr::filter(bin.speed < 500) %>%
-        summarize(mean.speed = mean(bin.speed),mean.angle = mean(bin.ang.vel)) %>%
+        dplyr::filter(bin.speed.man < 500) %>%
+        summarize(mean.speed = mean(bin.speed.man),mean.angle = mean(bin.ang.vel)) %>%
         ggplot(aes(x = mean.angle, y = mean.speed)) +
         labs(title = "Scatter plot by time bin") +
         geom_point(alpha = 0.05) +
@@ -208,6 +208,7 @@ system.time(
     }
     plot_position_changes <- function(data) {
       truncated <- data %>% group_by(worm) %>% summarise(n = n()) %>% dplyr::filter(n<10)
+
       p1<-data[!data$worm %in% truncated$worm,] %>% group_by(worm) %>%
         summarise(min = min(abs(del.y1)), mean = mean(abs(del.y1))) %>%
         ggplot() +
@@ -228,10 +229,9 @@ system.time(
 
     #### wrapper for all plot functions above ####
     plot_all_vect <- function(folder,data, time, xend, yend) {
-      p1 <- plot_density(data, xend, yend)
+      p1 <- plot_density_man(data, xend, yend)
       p2 <- plot_scatter(data, xend, yend)
-      p3 <- plot_density_man(data, xend, yend)
-      #p3 <- plot_position_changes(data)
+      p3 <- plot_position_changes(data)
       p4 <- plot_tracks(data, time)
       p<-gridExtra::grid.arrange(p1,p2,p3,p4, ncol = 2, nrow =2)
       ggsave(p, filename =file.path(folder,"plots.pdf"), width = 11, height = 8.5, units = "in",device = "pdf")
@@ -246,6 +246,7 @@ system.time(
       dwell <- data[!data$worm %in% truncated$worm,] %>% group_by(worm,time.bin) %>%
         summarize(mean.speed = mean(bin.speed.man),mean.angle = mean(bin.ang.vel)) %>%
         mutate(ratio = mean.speed/mean.angle) %>% dplyr::filter(ratio < slope) %>% nrow()
+
       pct.roam <- roam/(dwell+roam)
       print(pct.roam)
       return(data.frame(ID = folder, roam = roam, dwell = dwell, pct.roam = pct.roam))
@@ -257,18 +258,22 @@ system.time(
     if(missing(num.tracks)) {
       data <- WL.roam.data.vectorized(position.path = position.path,
                                       direction.path = direction.path,
-                                      speed.path = speed.path,
-                                      bin.length, frame.rate)
+                                      bin.length,
+                                      frame.rate)
     } else {
       num.tracks = num.tracks
       data <- WL.roam.data.vectorized(position.path = position.path,
                                       direction.path = direction.path,
-                                      speed.path = speed.path,
-                                      bin.length, frame.rate, num.tracks)
+                                      bin.length,
+                                      frame.rate,
+                                      num.tracks)
     }
 
     #### save data ####
+    message("writing to disk")
+    print(head(data))
     data.table::fwrite(data, file.path(folder,"all_track_data.csv"))
+    message("saving plots")
     plot_all_vect(folder,data,time,xend,yend)
     summary <- roam.pct(data, slope)
     data.table::fwrite(summary, file.path(folder,"roam_dwell.csv"))
