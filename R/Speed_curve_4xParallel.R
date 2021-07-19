@@ -35,7 +35,7 @@ folder.list <- list.dirs(dirname(file.choose()), recursive = FALSE)
 print(folder.list)
 directory <- getwd()
 # Calculate the number of cores
-no_cores <- min(detectCores() - 2,7) # uses a ton of RAM right now
+no_cores <- min(detectCores() - 2) # uses a ton of RAM right now
 #bin.length <- 4
 
 message("setting up clusters for parallel analysis")
@@ -101,7 +101,8 @@ system.time(
                                         num.tracks) {
 
       ####Setting up data#########
-      direction <- readr::read_csv(direction.path, skip = 4)
+      direction <- readr::read_csv(direction.path, skip = 4,
+                                   col_types = readr::cols(.default = readr::col_double()))
       if(missing(num.tracks)) {
         num.tracks <- length(direction) - 2
       } else {
@@ -123,7 +124,8 @@ system.time(
       # rm(speed.data)
 
       #### get position data ##########
-      position <- readr::read_csv(position.path, skip = 4)
+      position <- readr::read_csv(position.path, skip = 4,
+                                  col_types = readr::cols(.default = readr::col_double()))
       WL.centroid <- WL.pos.long(position, num.tracks) %>%
         dplyr::filter(!is.na(x)) %>%
         mutate(type = "centroid")
