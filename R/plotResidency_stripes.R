@@ -12,8 +12,16 @@
 plotResidency_stripes <- function(FileFilter,
                                   folderPath,
                                   arena_size = 16.1,
+                                  frame_rate = 2,
+                                  vid.length = 20,
+                                  y_bins = 50,
+                                  y_max = 5,
                             ...) {
 
+message("select a file in the folder you want to analyze")
+library(tidyverse)
+  library(scales)
+  ggplot2::theme_set(theme_classic())
   #### making an interactive option for the base folder:
    if(missing(folderPath)) {
     folderPath <- dirname(file.choose())
@@ -27,22 +35,28 @@ plotResidency_stripes <- function(FileFilter,
   files <- file.path(folderPath, files)
   files
 
+#get pixelsize in pixels / mm
+pixelsize <- files %>%
+  stringr::str_subset(., pattern = "preprocess.csv", negate = FALSE) %>%
+  read_csv(.) %>% select(pixelSize) %>% as.numeric()
+
 #### correct and determine cue boundaries by luminance:
 luminance <- files %>%
-  stringr::str_subset(., pattern = "luminance.csv", negate = FALSE)  %>%
-  # fix this later to read in only first and last column (much faster)
-  read_csv(col_names = FALSE) %>% select(1,length(.))
+  stringr::str_subset(., pattern = "luminance.csv", negate = FALSE) %>%
+  data.table::fread(., select = c(1,frame_rate*vid.length*60)) %>%
+  tibble()
 
 luminance %<>%
-  mutate(ypos = row_number()) %>%
-  rename(frame1 = X1, frameLast = X2400) %>%
+  mutate(ypos = row_number(),
+         y_mm = ypos / pixelsize) %>%
+  rename(frame1 = V1, frameLast = V2400) %>%
   pivot_longer(cols = starts_with("frame"),
                names_to = "frame",
                values_to = "luminance")
 
 ybinwidth <- arena_size / max(luminance$ypos)
 
-# linear regression should be a good way to compensate for luminace gradient across devices
+# linear regression should be a good way to compensate for luminance gradient across devices
 luminance <- luminance %>%
   group_by(frame) %>%
   nest() %>%
@@ -81,40 +95,106 @@ second_bound <- luminance %>%
   slice(1) %$% (ypos[1] - ypos[2]) * ybinwidth > 0.5
 
 try(if(second_bound) stop("boundaries unstable"))
+#
+#
+luminance <- luminance %>%
+  filter(frame == "frame1") %>%
+  ungroup() %>%
+  select(ypos, lum_bin)
 
 
 #### use y position data to generate relative residence
 ymat <- files %>%
   stringr::str_subset(., pattern = "ymat.csv", negate = FALSE)  %>%
-  # fix this later to read in only first and last column (much faster)
-  read_csv(col_names = FALSE) %>% mutate(worm = row_number())
+  data.table::fread() %>%
+  tibble() %>%
+  mutate(worm = row_number()) %>%
+  pivot_longer(cols = -worm, names_to = "time", values_to = "ypos") %>%
+  separate("time", into = c("spacer", "time"), sep = "V") %>%
+  mutate(time = as.numeric(time),
+         ypos = round(ypos,0)) %>%
+  select(worm, time, ypos)
 
-ymat %>%
-  pivot_longer(cols = -worm, names_to = "time", values_to = "y") %>%
-  mutate(ybin=cut(y,breaks=seq(from = 0, to = 1000, by = 20))) %>%
-  group_by(ybin, .drop = FALSE) %>%
+#merge luminance and yposition:
+raw_residence <- full_join(luminance, ymat) %>%
+  filter(!is.na(worm), !is.na(ypos)) %>%
+  #censor outermost 1mm due to edge effects
+  filter(!ypos < pixelsize, !ypos > max(ypos)-pixelsize) %>%
+  mutate(y_mm = ypos / pixelsize)
+
+# calculate relative che index:
+#
+left_bound <- raw_residence %>%
+  filter(lum_bin == "dye") %>% slice(1) %>%
+  select(y_mm) %>% as.numeric()
+
+right_bound <- raw_residence %>%
+  filter(y_mm > 6, lum_bin == "buffer") %>% slice(1) %>%
+  select(y_mm) %>% as.numeric()
+
+length_buffer <- (left_bound - 1) + (max(raw_residence$y_mm) - right_bound)
+length_dye <- right_bound - left_bound
+total_length <- max(raw_residence$y_mm) - 1
+
+track_counts <- raw_residence %>%
+  group_by(lum_bin) %>%
   tally() %>%
-  filter(!is.na(ybin)) %>%
-  ggplot(aes(x = ybin)) +
-  geom_tile(aes(y = factor(1), fill=n)) +
-  theme(axis.text.x = element_blank())
+  pivot_wider(names_from = lum_bin, values_from = n) %>%
+  mutate(n_tracks = buffer + dye,
+    length_buffer = length_buffer,
+         length_dye = length_dye,
+         length_total = total_length,
+         norm_tot_buf = (buffer / (length_buffer/total_length)),
+         norm_tot_dye = dye / (length_dye/total_length),
+         index = (norm_tot_dye - norm_tot_buf ) / (norm_tot_dye + norm_tot_buf))
 
-return(ymat)
 
-#return(select(luminance, ypos, lum_bin) %>% filter(frame == "frame1"))
+#to plot histogram
+
+p.histogram <- raw_residence %>%
+  ggplot(aes(x = y_mm)) +
+  geom_histogram(aes(y = stat(count) / mean(count), fill = lum_bin), bins = y_bins) +
+  labs(x = "position (mm)",
+       y = "relative residence") +
+  scale_fill_manual(values = c("grey", "lightblue")) +
+  coord_cartesian(ylim=c(0,y_max), xlim = c(1,15), expand = FALSE )
+
+# to plot heatmap
+p.heatmap <- raw_residence %>%
+  ggplot(aes(x = y_mm)) +
+  stat_bin_2d(
+    aes(y = factor(1),
+        fill = stat(count) / mean(count),
+        color = stat(count) / mean(count)),
+    # size = 0.05,
+    geom = "tile",
+    position = "identity",
+    bins = y_bins) +
+  coord_cartesian( ylim=c(0.5,1.5), xlim = c(1,15), expand = FALSE ) +
+  labs(fill = "relative residence",
+       x = "position (mm)") +
+  theme(axis.text.y = element_blank(),
+        axis.title.y = element_blank()) +
+  scale_fill_continuous(limits = c(0,y_max),oob=squish)
+  #theme(axis.text.x = element_blank())
 
 
+write_csv(track_counts, file = file.path(folderPath,paste0(basename(folderPath),"index.csv")))
+write_csv(raw_residence, file = file.path(folderPath,paste0(basename(folderPath),"raw_residence.csv")))
 
-### put a line to save the luminance plots
-#
-# luminance %<>% luminance %>%
-#   select(ypos, lum_bin)
-#
-# files %>%
-#   stringr::str_subset(., pattern = "ymat.csv", negate = FALSE)
 
-  #need to read in with purr::map
+ggsave(plot = p.heatmap,
+       filename = file.path(folderPath,paste0(basename(folderPath),"_heatmap.pdf")),
+       width = 4,
+       height = 1,
+       units = "in")
 
-# check that luminance looks same at start and finish:
+ggsave(plot = p.histogram,
+       filename = file.path(folderPath,paste0(basename(folderPath),"_histogram.pdf")),
+       width = 4,
+       height = 4,
+       units = "in")
+
+return(list(raw_residence, p.histogram, p.heatmap))
 
 }

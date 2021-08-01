@@ -4,7 +4,16 @@
 \alias{plotResidency_stripes}
 \title{plotResidency_stripes}
 \usage{
-plotResidency_stripes(FileFilter, folderPath, arena_size = 16.1, ...)
+plotResidency_stripes(
+  FileFilter,
+  folderPath,
+  arena_size = 16.1,
+  frame_rate = 2,
+  vid.length = 20,
+  y_bins = 50,
+  y_max = 5,
+  ...
+)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
