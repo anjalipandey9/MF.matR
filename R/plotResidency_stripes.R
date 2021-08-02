@@ -7,7 +7,7 @@
 #' @importFrom magrittr "%<>%"
 #' @importFrom magrittr "%$%"
 #' @export
-#' @examples data <- plotResidency_stripes(N2, genotype = N2, cue = octanol)
+#' @examples data <- plotResidency_stripes()
 #'
 plotResidency_stripes <- function(FileFilter,
                                   folderPath,

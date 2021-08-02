@@ -22,6 +22,6 @@ plotResidency_stripes(
 Plots residency data by inside, outside stripe. Generates a heatmap by experiment
 }
 \examples{
-data <- plotResidency_stripes(N2, genotype = N2, cue = octanol)
+data <- plotResidency_stripes()
 
 }
