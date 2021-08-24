@@ -16,6 +16,7 @@ plotResidency_stripes <- function(FileFilter,
                                   vid.length = 20,
                                   y_bins = 50,
                                   y_max = 5,
+                                  heatmap_limits,
                             ...) {
 
 message("select a file in the folder you want to analyze")
@@ -27,6 +28,10 @@ library(tidyverse)
     folderPath <- dirname(file.choose())
   }
   message(paste("using files at or below the folder:", basename(folderPath)))
+
+  breaks <- heatmap_limits
+  labels <- as.character(breaks)
+  limits <- breaks[c(1,3)]
 
 #### select csv files that match the pattern, with an optional FileFilter
   files <- list.files(file.path(folderPath), pattern = "*.csv", recursive = TRUE)
@@ -102,6 +107,9 @@ luminance <- luminance %>%
   ungroup() %>%
   select(ypos, lum_bin)
 
+ypos_all <- luminance %>%
+  mutate(y_mm = ypos / pixelsize) %>%
+  select(y_mm)
 
 #### use y position data to generate relative residence
 ymat <- files %>%
@@ -148,7 +156,16 @@ track_counts <- raw_residence %>%
          norm_tot_dye = dye / (length_dye/total_length),
          index = (norm_tot_dye - norm_tot_buf ) / (norm_tot_dye + norm_tot_buf))
 
+#convert missing y positions to 0
+rel_residence <- raw_residence %>%
+  count(y_mm) %>%
+  full_join(ypos_all) %>%
+  mutate(n = ifelse(is.na(n),0,n))
 
+mean_res <- mean(rel_residence$n)
+
+rel_residence <- rel_residence %>%
+  mutate(relres = n / mean_res)
 #to plot histogram
 
 p.histogram <- raw_residence %>%
@@ -157,25 +174,28 @@ p.histogram <- raw_residence %>%
   labs(x = "position (mm)",
        y = "relative residence") +
   scale_fill_manual(values = c("grey", "lightblue")) +
-  coord_cartesian(ylim=c(0,y_max), xlim = c(1,15), expand = FALSE )
+  coord_cartesian(ylim=c(0,y_max), xlim = c(1,15), expand = FALSE)
 
 # to plot heatmap
-p.heatmap <- raw_residence %>%
+p.heatmap <- rel_residence %>%
   ggplot(aes(x = y_mm)) +
-  stat_bin_2d(
-    aes(y = factor(1),
-        fill = stat(count) / mean(count),
-        color = stat(count) / mean(count)),
-    # size = 0.05,
-    geom = "tile",
-    position = "identity",
-    bins = y_bins) +
-  coord_cartesian( ylim=c(0.5,1.5), xlim = c(1,15), expand = FALSE ) +
+  geom_tile(aes(fill = relres, y = 1)) +
+    #     fill = stat(count) / mean(count),
+    #     color = stat(count) / mean(count)),
+    # na.rm = FALSE,
+    # geom = "tile",
+    # position = "identity",
+    # bins = y_bins) +
+  coord_cartesian( ylim=c(0.5,1.5), xlim = c(1,15), expand = FALSE) +
   labs(fill = "relative residence",
        x = "position (mm)") +
   theme(axis.text.y = element_blank(),
         axis.title.y = element_blank()) +
-  scale_fill_continuous(limits = c(0,y_max),oob=squish)
+  scale_fill_continuous(
+    breaks = breaks,
+    labels = labels,
+    limits = limits,
+    oob=squish)
   #theme(axis.text.x = element_blank())
 
 
@@ -195,6 +215,6 @@ ggsave(plot = p.histogram,
        height = 4,
        units = "in")
 
-return(list(raw_residence, p.histogram, p.heatmap))
+return(list(raw_residence, rel_residence, p.histogram, p.heatmap))
 
 }
