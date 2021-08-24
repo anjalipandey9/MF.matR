@@ -12,6 +12,7 @@ plotResidency_stripes(
   vid.length = 20,
   y_bins = 50,
   y_max = 5,
+  heatmap_limits,
   ...
 )
 }
