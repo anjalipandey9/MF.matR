@@ -7,7 +7,7 @@
 #' @importFrom magrittr "%<>%"
 #' @importFrom magrittr "%$%"
 #' @export
-#' @examples data <- plotResidency_stripes()
+#' @examples data <- plotAvgResidency()
 
 plotAvgResidency <- function(folderPath,
                                   y_bins = 50,
@@ -28,7 +28,7 @@ plotAvgResidency <- function(folderPath,
   merged_df <- folderPath %>%
     fs::dir_ls(glob = "*raw_residence.csv*",
                recurse = TRUE) %>%
-    map_df(~data.table::fread(.),.id = "filename") %>%
+    map_df(~data.table::fread(.),.id = "filename") #%>%
     tibble() %>%
     mutate(filename = factor(basename(filename)))
 
