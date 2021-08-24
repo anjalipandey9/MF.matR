@@ -13,5 +13,5 @@ plotAvgResidency(folderPath, y_bins = 50, y_max = 5, ...)
 Plots average residency for stripe data
 }
 \examples{
-data <- plotResidency_stripes()
+data <- plotAvgResidency()
 }
