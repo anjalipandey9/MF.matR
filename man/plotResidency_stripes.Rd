@@ -4,7 +4,17 @@
 \alias{plotResidency_stripes}
 \title{plotResidency_stripes}
 \usage{
-plotResidency_stripes(FileFilter, folderPath, arena_size = 16.1, ...)
+plotResidency_stripes(
+  FileFilter,
+  folderPath,
+  arena_size = 16.1,
+  frame_rate = 2,
+  vid.length = 20,
+  y_bins = 50,
+  y_max = 5,
+  heatmap_limits,
+  ...
+)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
@@ -13,6 +23,6 @@ plotResidency_stripes(FileFilter, folderPath, arena_size = 16.1, ...)
 Plots residency data by inside, outside stripe. Generates a heatmap by experiment
 }
 \examples{
-data <- plotResidency_stripes(N2, genotype = N2, cue = octanol)
+data <- plotResidency_stripes()
 
 }
