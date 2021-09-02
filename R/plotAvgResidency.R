@@ -17,6 +17,8 @@ plotAvgResidency <- function(folderPath,
   message("select a file in the folder you want to analyze - you need a file in the folder to select")
   library(tidyverse)
   library(scales)
+  library(fs)
+  library(data.table)
   ggplot2::theme_set(theme_classic())
 
   #### making an interactive option for the base folder:
@@ -26,9 +28,10 @@ plotAvgResidency <- function(folderPath,
   message(paste("using files at or below the folder:", basename(folderPath)))
 
   merged_df <- folderPath %>%
-    fs::dir_ls(glob = "*raw_residence.csv*",
+    fs::dir_ls(path = .,
+               glob = "*raw_residence.csv*",
                recurse = TRUE) %>%
-    map_df(~data.table::fread(.),.id = "filename") #%>%
+    map_df(~data.table::fread(.),.id = "filename") %>%
     tibble() %>%
     mutate(filename = factor(basename(filename)))
 
