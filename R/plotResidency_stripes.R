@@ -110,7 +110,7 @@ luminance <- luminance %>%
 
 ypos_all <- luminance %>%
   mutate(y_mm = ypos / pixelsize) %>%
-  select(y_mm)
+  select(y_mm, lum_bin)
 
 #### use y position data to generate relative residence
 ymat <- files %>%
@@ -133,21 +133,28 @@ raw_residence <- full_join(luminance, ymat) %>%
 
 # calculate relative che index:
 #
-left_bound <- raw_residence %>%
+left_bound <-
+  ypos_all %>%
+  # raw_residence %>%
   filter(lum_bin == "dye") %>% slice(1) %>%
   select(y_mm) %>% as.numeric()
 
-right_bound <- raw_residence %>%
+right_bound <-
+  ypos_all %>%
+  # raw_residence %>%
   filter(y_mm > 6, lum_bin == "buffer") %>% slice(1) %>%
   select(y_mm) %>% as.numeric()
 
-length_buffer <- (left_bound - 1) + (max(raw_residence$y_mm) - right_bound)
+length_buffer <- (left_bound - 1) + (max(ypos_all$y_mm) - right_bound)
 length_dye <- right_bound - left_bound
-total_length <- max(raw_residence$y_mm) - 1
+total_length <- max(ypos_all$y_mm) - 1
 
 track_counts <- raw_residence %>%
+  count(y_mm) %>%
+  full_join(ypos_all) %>%
+  mutate(n = ifelse(is.na(n),0,n)) %>%
   group_by(lum_bin) %>%
-  tally() %>%
+  summarize(n = sum(n)) %>%
   pivot_wider(names_from = lum_bin, values_from = n) %>%
   mutate(n_tracks = buffer + dye,
     length_buffer = length_buffer,
