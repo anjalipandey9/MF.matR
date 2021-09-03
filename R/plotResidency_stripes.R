@@ -168,12 +168,17 @@ track_counts <- raw_residence %>%
 rel_residence <- raw_residence %>%
   count(y_mm) %>%
   full_join(ypos_all) %>%
-  mutate(n = ifelse(is.na(n),0,n))
+  mutate(n = ifelse(is.na(n),0,n)) %>%
+  mutate(ybin = cut(y_mm, y_bins)) %>%
+  group_by(ybin,lum_bin) %>%
+  summarize(count = sum(n)) %>%
+  ungroup() %>%
+  mutate(y_mm = seq(0,16.2, length.out = nrow(.)))
 
-mean_res <- mean(rel_residence$n)
+mean_res <- mean(rel_residence$count)
 
 rel_residence <- rel_residence %>%
-  mutate(relres = n / mean_res)
+  mutate(relres = count / mean_res)
 #to plot histogram
 
 p.histogram <- raw_residence %>%
@@ -187,7 +192,7 @@ p.histogram <- raw_residence %>%
 # to plot heatmap
 p.heatmap <- rel_residence %>%
   ggplot(aes(x = y_mm)) +
-  geom_tile(aes(fill = relres, y = 1)) +
+  geom_raster(aes(fill = relres, y = 1)) +
     #     fill = stat(count) / mean(count),
     #     color = stat(count) / mean(count)),
     # na.rm = FALSE,
