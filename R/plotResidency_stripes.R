@@ -6,6 +6,7 @@
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
 #' @importFrom magrittr "%$%"
+#'
 #' @export
 #' @examples data <- plotResidency_stripes()
 #'
@@ -109,7 +110,7 @@ luminance <- luminance %>%
 
 ypos_all <- luminance %>%
   mutate(y_mm = ypos / pixelsize) %>%
-  select(y_mm)
+  select(y_mm, lum_bin)
 
 #### use y position data to generate relative residence
 ymat <- files %>%
@@ -132,21 +133,28 @@ raw_residence <- full_join(luminance, ymat) %>%
 
 # calculate relative che index:
 #
-left_bound <- raw_residence %>%
+left_bound <-
+  ypos_all %>%
+  # raw_residence %>%
   filter(lum_bin == "dye") %>% slice(1) %>%
   select(y_mm) %>% as.numeric()
 
-right_bound <- raw_residence %>%
+right_bound <-
+  ypos_all %>%
+  # raw_residence %>%
   filter(y_mm > 6, lum_bin == "buffer") %>% slice(1) %>%
   select(y_mm) %>% as.numeric()
 
-length_buffer <- (left_bound - 1) + (max(raw_residence$y_mm) - right_bound)
+length_buffer <- (left_bound - 1) + (max(ypos_all$y_mm) - right_bound)
 length_dye <- right_bound - left_bound
-total_length <- max(raw_residence$y_mm) - 1
+total_length <- max(ypos_all$y_mm) - 1
 
 track_counts <- raw_residence %>%
+  count(y_mm) %>%
+  full_join(ypos_all) %>%
+  mutate(n = ifelse(is.na(n),0,n)) %>%
   group_by(lum_bin) %>%
-  tally() %>%
+  summarize(n = sum(n)) %>%
   pivot_wider(names_from = lum_bin, values_from = n) %>%
   mutate(n_tracks = buffer + dye,
     length_buffer = length_buffer,
@@ -160,12 +168,17 @@ track_counts <- raw_residence %>%
 rel_residence <- raw_residence %>%
   count(y_mm) %>%
   full_join(ypos_all) %>%
-  mutate(n = ifelse(is.na(n),0,n))
+  mutate(n = ifelse(is.na(n),0,n)) %>%
+  mutate(ybin = cut(y_mm, y_bins)) %>%
+  group_by(ybin,lum_bin) %>%
+  summarize(count = sum(n)) %>%
+  ungroup() %>%
+  mutate(y_mm = seq(0,16.2, length.out = nrow(.)))
 
-mean_res <- mean(rel_residence$n)
+mean_res <- mean(rel_residence$count)
 
 rel_residence <- rel_residence %>%
-  mutate(relres = n / mean_res)
+  mutate(relres = count / mean_res)
 #to plot histogram
 
 p.histogram <- raw_residence %>%
@@ -179,7 +192,7 @@ p.histogram <- raw_residence %>%
 # to plot heatmap
 p.heatmap <- rel_residence %>%
   ggplot(aes(x = y_mm)) +
-  geom_tile(aes(fill = relres, y = 1)) +
+  geom_raster(aes(fill = relres, y = 1)) +
     #     fill = stat(count) / mean(count),
     #     color = stat(count) / mean(count)),
     # na.rm = FALSE,
