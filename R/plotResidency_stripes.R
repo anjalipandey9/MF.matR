@@ -169,9 +169,10 @@ rel_residence <- raw_residence %>%
   count(y_mm) %>%
   full_join(ypos_all) %>%
   mutate(n = ifelse(is.na(n),0,n)) %>%
-  mutate(ybin = cut(y_mm, y_bins)) %>%
-  group_by(ybin,lum_bin) %>%
-  summarize(count = sum(n)) %>%
+  mutate(ybin = cut(y_mm, y_bins),
+         ybin_numeric = as.numeric(as.factor(ybin))) %>%
+  group_by(ybin,ybin_numeric,lum_bin) %>%
+  summarize(count = sum(n),) %>%
   ungroup() %>%
   mutate(y_mm = seq(0,16.2, length.out = nrow(.)))
 
@@ -214,6 +215,7 @@ p.heatmap <- rel_residence %>%
 
 write_csv(track_counts, file = file.path(folderPath,paste0(basename(folderPath),"index.csv")))
 write_csv(raw_residence, file = file.path(folderPath,paste0(basename(folderPath),"raw_residence.csv")))
+write_csv(rel_residence, file = file.path(folderPath,paste0(basename(folderPath),"rel_residence.csv")))
 
 
 ggsave(plot = p.heatmap,
