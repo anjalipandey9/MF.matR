@@ -44,14 +44,14 @@ plotAvgResidency <- function(folderPath,
     group_by(ybin_numeric) %>%
     summarize(relres = mean(relres)) %>%
     ggplot() +
-    geom_rect(aes(ymin = 0,
-                  ymax = relres,
-                  xmin = (16.2/50)*(ybin_numeric-.5),
-                  xmax = (16.2/50)*(ybin_numeric+.5)),
+    geom_rect(aes(xmin = 0,
+                  xmax = relres,
+                  ymin = (16.2/50)*(ybin_numeric-.5),
+                  ymax = (16.2/50)*(ybin_numeric+.5)),
                   fill = fillcolor,
                   color = bordercolor) +
-    labs(x = "position (mm)",y = "relative residence") +
-    scale_y_continuous(limits = c(0,y_max), expand = c(0,0))
+    labs(y = "position (mm)",x = "relative residence") +
+    scale_x_continuous(limits = c(0,y_max), expand = c(0,0))
 
   ggsave(plot = plot, filename = file.path(folderPath,paste0(basename(folderPath),"_averageHistogram.pdf")), width = 4, height = 4, units = "in")
 
