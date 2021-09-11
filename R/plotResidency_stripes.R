@@ -18,6 +18,8 @@ plotResidency_stripes <- function(FileFilter,
                                   y_bins = 50,
                                   y_max = 5,
                                   heatmap_limits,
+                                  heatmap_palette = "Greys",
+                                  plot.direction = 1,
                             ...) {
 
 message("select a file in the folder you want to analyze")
@@ -29,7 +31,8 @@ library(tidyverse)
     folderPath <- dirname(file.choose())
   }
   message(paste("using files at or below the folder:", basename(folderPath)))
-
+  plot.direction <- plot.direction
+  heatmap_palette <- quo_name(enquo(heatmap_palette))
   breaks <- heatmap_limits
   labels <- as.character(breaks)
   limits <- breaks[c(1,3)]
@@ -183,34 +186,38 @@ rel_residence <- rel_residence %>%
 #to plot histogram
 
 p.histogram <- raw_residence %>%
-  ggplot(aes(x = y_mm)) +
-  geom_histogram(aes(y = stat(count) / mean(count), fill = lum_bin), bins = y_bins) +
-  labs(x = "position (mm)",
-       y = "relative residence") +
+  ggplot(aes(y = y_mm)) +
+  geom_histogram(aes(x = stat(count) / mean(count), fill = lum_bin), bins = y_bins) +
+  labs(y = "position (mm)",
+       x = "relative residence") +
   scale_fill_manual(values = c("grey", "lightblue")) +
-  coord_cartesian(ylim=c(0,y_max), xlim = c(1,15), expand = FALSE)
+  coord_cartesian(xlim=c(0,y_max), ylim = c(1,15), expand = FALSE) +
+  theme(legend.position = "bottom")
 
 # to plot heatmap
 p.heatmap <- rel_residence %>%
-  ggplot(aes(x = y_mm)) +
-  geom_raster(aes(fill = relres, y = 1)) +
+  ggplot(aes(y = y_mm)) +
+  geom_raster(aes(fill = relres, x = 1)) +
     #     fill = stat(count) / mean(count),
     #     color = stat(count) / mean(count)),
     # na.rm = FALSE,
     # geom = "tile",
     # position = "identity",
     # bins = y_bins) +
-  coord_cartesian( ylim=c(0.5,1.5), xlim = c(1,15), expand = FALSE) +
+  coord_cartesian(xlim=c(0.5,1.5), ylim = c(1,15), expand = FALSE) +
   labs(fill = "relative residence",
-       x = "position (mm)") +
-  theme(axis.text.y = element_blank(),
-        axis.title.y = element_blank()) +
-  scale_fill_continuous(
+       y = "position (mm)") +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "bottom") +
+  scale_fill_distiller(
     breaks = breaks,
     labels = labels,
     limits = limits,
-    oob=squish)
-  #theme(axis.text.x = element_blank())
+    oob=squish,
+    palette = heatmap_palette,
+    direction = plot.direction)
 
 
 write_csv(track_counts, file = file.path(folderPath,paste0(basename(folderPath),"index.csv")))
@@ -220,8 +227,8 @@ write_csv(rel_residence, file = file.path(folderPath,paste0(basename(folderPath)
 
 ggsave(plot = p.heatmap,
        filename = file.path(folderPath,paste0(basename(folderPath),"_heatmap.pdf")),
-       width = 4,
-       height = 1,
+       width = 1,
+       height = 4,
        units = "in")
 
 ggsave(plot = p.histogram,
