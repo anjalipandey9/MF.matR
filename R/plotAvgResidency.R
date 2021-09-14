@@ -37,32 +37,33 @@ plotAvgResidency <- function(folderPath,
 
   #calculate relateive residence per assay
   #
-  rel_merged_df <- merged_df %>%
-    mutate(ybin = cut(y_mm, 100)) %>%
-    group_by(filename,ybin) %>%
-    tally() %>%
-    separate(ybin, into = c("spacer", "lower", "upper"), sep = "[(,\\]]") %>%
-    mutate(upper = as.numeric(upper),
-           lower = as.numeric(lower),
-           y_mm = (lower + upper) / 2)
-
-  total_n_assay <- rel_merged_df %>%
-    group_by(filename) %>%
-    summarize(mean_count = mean(n))
-
-  plot <- full_join(rel_merged_df, total_n_assay, by = "filename") %>%
-    mutate(rel.res = n/mean_count) %>%
-    group_by(y_mm) %>%
-    summarize(mean_relRes = mean(rel.res)) %>%
-    ggplot(aes(x = y_mm)) +
-    geom_histogram(stat = "identity",
-                   aes(y = mean_relRes),
-                   width = rel_merged_df$upper[1]-rel_merged_df$upper[2]) +
-    labs(x = "position (mm)",
-         y = "relative residence") +
-    scale_x_continuous(breaks = c(0,5,10,15))
-
-  ggsave(plot = plot, filename = file.path(folderPath,paste0(basename(folderPath),"_averageHistogram.pdf")), width = 4, height = 4, units = "in")
+  # rel_merged_df <- merged_df %>%
+  #   mutate(ybin = cut(y_mm, 100)) %>%
+  #   group_by(filename,ybin) %>%
+  #   tally() %>%
+  #   separate(ybin, into = c("spacer", "lower", "upper"), sep = "[(,\\]]") %>%
+  #   mutate(upper = as.numeric(upper),
+  #          lower = as.numeric(lower),
+  #          y_mm = (lower + upper) / 2)
+  #
+  # total_n_assay <- rel_merged_df %>%
+  #   group_by(filename) %>%
+  #   summarize(mean_count = mean(n))
+  #
+  # plot <- full_join(rel_merged_df, total_n_assay, by = "filename") %>%
+  #   mutate(rel.res = n/mean_count) %>%
+  #   group_by(y_mm) %>%
+  #   summarize(mean_relRes = mean(rel.res)) %>%
+  #   ggplot(aes(x = y_mm)) +
+  #   geom_histogram(stat = "identity",
+  #                  aes(y = mean_relRes),
+  #                  width = rel_merged_df$upper[1]-rel_merged_df$upper[2]) +
+  #   labs(x = "position (mm)",
+  #        y = "relative residence") +
+  #   scale_x_continuous(breaks = c(0,5,10,15)) +
+  #   scale_y_continuous(limits = c(0, y_max))
+  #
+  # ggsave(plot = plot, filename = file.path(folderPath,paste0(basename(folderPath),"_averageHistogram.pdf")), width = 4, height = 4, units = "in")
 
 
 }
