@@ -4,7 +4,14 @@
 \alias{plotAvgResidency}
 \title{plotAvgResidency}
 \usage{
-plotAvgResidency(folderPath, y_bins = 50, y_max = 5, ...)
+plotAvgResidency(
+  folderPath,
+  y_bins = 50,
+  y_max = 4,
+  fillcolor = "grey",
+  bordercolor = NA,
+  ...
+)
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
