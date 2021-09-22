@@ -204,12 +204,13 @@ p.heatmap <- rel_residence %>%
     # geom = "tile",
     # position = "identity",
     # bins = y_bins) +
-  coord_cartesian(xlim=c(0.5,1.5), ylim = c(1,15), expand = FALSE) +
+  coord_cartesian(xlim=c(0.5,1.5), ylim = c(0,16.2), expand = FALSE) +
   labs(fill = "relative residence",
        y = "position (mm)") +
   theme(axis.text.x = element_blank(),
         axis.title.x = element_blank(),
         axis.ticks.x = element_blank(),
+        axis.ticks.y = c(0,5,10,15),
         legend.position = "bottom") +
   scale_fill_distiller(
     breaks = breaks,
