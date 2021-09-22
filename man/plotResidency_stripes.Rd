@@ -13,6 +13,8 @@ plotResidency_stripes(
   y_bins = 50,
   y_max = 5,
   heatmap_limits,
+  heatmap_palette = "Greys",
+  plot.direction = 1,
   ...
 )
 }
