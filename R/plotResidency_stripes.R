@@ -210,8 +210,8 @@ p.heatmap <- rel_residence %>%
   theme(axis.text.x = element_blank(),
         axis.title.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.ticks.y = c(0,5,10,15),
         legend.position = "bottom") +
+  scale_y_continuous(breaks = c(0,5,10,15)) +
   scale_fill_distiller(
     breaks = breaks,
     labels = labels,
