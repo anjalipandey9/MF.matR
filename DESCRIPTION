@@ -24,8 +24,7 @@ Imports:
     ggrepel,
     tidyverse,
     purrr,
-    remotes,
-    ArgumentCheck
+    remotes
 Remotes:
     thomasp85/patchwork
 License: What license is it under?

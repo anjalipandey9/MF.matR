@@ -66,30 +66,16 @@ plotGCaMP_multi <- function(FileFilter,
   center_on_pulse <- quo_name(enquo(center_on_pulse))
   #heatmap_limits <- enquo(heatmap_limits)
 
-  Check <- ArgumentCheck::newArgCheck()
-
   if (genotype == "genotype")
-    ArgumentCheck::addError(
-      msg = "You left out the 'genotype' argument, was this intentional?",
-      argcheck = Check)
+    {stop("error: You left out the 'genotype' argument, was this intentional?")}
 
   if (cue == "cue")
-    ArgumentCheck::addError(
-      msg = "You left out the 'cue' argument, was this intentional?",
-      argcheck = Check)
+    {stop("error: You left out the 'cue' argument, was this intentional?")}
+
 
   if (!center_on_pulse %in% c("none", "ON", "OFF")) {
-    ArgumentCheck::addError(
-      msg = "'center_on_pulse' must be either 'none', 'ON'or 'OFF'",
-      argcheck = Check
-    )
+    stop("error: 'center_on_pulse' must be either 'none', 'ON'or 'OFF'")}
 
-  }
-
-
-
-  #* Return errors and warnings (if any)
-  ArgumentCheck::finishArgCheck(Check)
 
   if(missing(folderPath)) {
     folderPath <- dirname(file.choose())
@@ -149,18 +135,19 @@ plotGCaMP_multi <- function(FileFilter,
                        food = food,
                        neuron = neuron)
 
- #check for same length viedo files:
-   Check2 <- ArgumentCheck::newArgCheck()
+  if (data %>%
+      unnest(cols = c(data)) %>%
+      group_by(animal) %>%
+      tally() %$%
+      unique(n) %>%
+      length() != 1) stop("error: One or more of your video files are of different length, check these files")
+  data %>%
+    unnest(cols = c(data)) %>%
+    group_by(animal) %>%
+    tally() %>%
+    filter(n < max(n)) %>%
+    select(animal)
 
-  if (data %>% unnest(cols = c(data)) %>% group_by(animal) %>% tally() %$% unique(n) %>% length() != 1) {
-    ArgumentCheck::addError(
-      msg = print(c("One or more of your video files are of different length, check these files:",
-                    data %>% unnest(cols = c(data)) %>% group_by(animal) %>% tally() %>% filter(n < max(n)) %>% select(animal))),
-      argcheck = Check2)
-  }
-
-  #* Return errors and warnings (if any)
-  ArgumentCheck::finishArgCheck(Check2)
 
 
   #### recenter mean values ####

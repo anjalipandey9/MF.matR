@@ -4,7 +4,7 @@
 \alias{pulse_amplitude}
 \title{pulse_amplitudes}
 \usage{
-pulse_amplitude(stim_on = 30, stim_off = 60)
+pulse_amplitude(stim_on = 30, stim_off = 60, method = "max")
 }
 \arguments{
 \item{FileFilter}{string to search/subset filenames}
