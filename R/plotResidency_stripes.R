@@ -65,7 +65,7 @@ luminance %<>%
 
 ybinwidth <- arena_size / max(luminance$ypos)
 
-# linear regression should be a good way to compensate for luminance gradient across devices
+# linear regression to compensate for luminance gradient across devices
 luminance <- luminance %>%
   group_by(frame) %>%
   nest() %>%

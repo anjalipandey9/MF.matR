@@ -14,10 +14,51 @@ WTbuffResid <- WTbuff %>%
   map_noise_deviance() %>%
   mutate(genotype = "N2", cue = "buffer")
 
+odr3buff <- read_csv(file.choose())
+odr3buffresid <- odr3buff  %>%
+  map_noise_deviance() %>%
+  mutate(genotype = "odr3", cue = "buffer")
+
+pBuff <- rbind(WTbuff,odr3buff) %>%
+  filter(time > 5, time <29) %>%
+  ggplot(aes(x = time, y = delF)) +
+  geom_line(aes(color = genotype, group = animal),alpha = 0.5) +
+  theme_classic() +
+  coord_cartesian(ylim = c(-.2,.2)) +
+  facet_grid(genotype~.) +
+  theme(legend.position = "none")
+
 WTIAA <- read_csv(file.choose())
 WTIAAresid <- WTIAA %>%
   map_noise_deviance()  %>%
   mutate(genotype = "N2", cue = "IAA")
+
+odr3IAA <- read_csv(file.choose())
+odr3IAAresid <- odr3IAA  %>%
+  map_noise_deviance()%>%
+  mutate(genotype = "odr3", cue = "IAA")
+
+
+pIAA <- rbind(WTIAA,odr3IAA) %>%
+  filter(time > 5, time <29) %>%
+  ggplot(aes(x = time, y = delF)) +
+  geom_line(aes(color = genotype, group = animal),alpha = 0.5) +
+  theme_classic() +
+  coord_cartesian(ylim = c(-.2,.2)) +
+  facet_grid(genotype~.) +
+  theme(legend.position = "none")
+
+
+rbind(WTbuffResid,
+      odr3buffresid,
+      WTIAAresid,
+      odr3IAAresid) %>%
+  ggplot(aes(x = interaction(cue,genotype), y = deviance)) +
+  geom_boxplot() +
+  ggbeeswarm::geom_quasirandom(aes(color = cue), alpha = 0.5, width = 0.25) +
+  labs(y = "residual deviance \n (lower means less variability") +
+  coord_cartesian(ylim = c(0,0.25))
+
 
 WTHexSat <- read_csv(file.choose())
 HexSatresid <- WTHexSat %>%
@@ -25,7 +66,7 @@ HexSatresid <- WTHexSat %>%
   mutate(genotype = "N2", cue = "Hex")
 
 pWT <- rbind(WTbuff,WTIAA,WTHexSat) %>%
-  filter(time > 15, time <29) %>%
+  filter(time > 5, time <29) %>%
   ggplot(aes(x = time, y = delF)) +
   geom_line(aes(color = cue, group = animal),alpha = 0.5) +
   theme_classic() +
@@ -33,15 +74,8 @@ pWT <- rbind(WTbuff,WTIAA,WTHexSat) %>%
 
 pWT + facet_grid(cue~.)
 
-odr3buff <- read_csv(file.choose())
-odr3buffresid <- odr3buff  %>%
-  map_noise_deviance() %>%
-  mutate(genotype = "odr3", cue = "buffer")
 
-odr3IAA <- read_csv(file.choose())
-odr3IAAresid <- odr3IAA  %>%
-  map_noise_deviance()%>%
-  mutate(genotype = "odr3", cue = "IAA")
+
 
 WTbuff2 <- read_csv(file.choose())
 WTbuff2resid <- WTbuff2  %>%
@@ -60,7 +94,7 @@ WTbuff3resid <- WTbuff3  %>%
 
 
 podr3 <- rbind(odr3buff,odr3IAA,WTbuff2,WTbuff3) %>%
-  filter(time > 15, time <29) %>%
+  filter(time > 5, time <29) %>%
   ggplot(aes(x = time, y = delF)) +
   geom_line(aes(color = interaction(genotype,cue), group = animal),alpha = 0.5) +
   theme_classic() +
@@ -72,7 +106,7 @@ podr3 + facet_grid(interaction(genotype,cue)~.)
 rbind(WTbuff,WTbuff2,WTbuff3) %>%
   mutate(animalID = interaction(animal, animal_num)) %>%
   separate(animal, into = "date") %>%
-  filter(time > 15, time <29) %>%
+  filter(time > 5, time <29) %>%
   ggplot(aes(x = time, y = delF)) +
   geom_line(aes(color = date, group = animalID),alpha = 0.5) +
   theme_classic() +
