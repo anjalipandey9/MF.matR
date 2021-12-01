@@ -15,6 +15,7 @@ plotResidency_stripes(
   heatmap_limits,
   heatmap_palette = "Greys",
   plot.direction = 1,
+  time_bins = 1,
   ...
 )
 }

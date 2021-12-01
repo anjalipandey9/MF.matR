@@ -20,6 +20,7 @@ plotResidency_stripes <- function(FileFilter,
                                   heatmap_limits,
                                   heatmap_palette = "Greys",
                                   plot.direction = 1,
+                                  time_bins = 1,
                             ...) {
 
 message("select a file in the folder you want to analyze")
@@ -92,7 +93,7 @@ luminance <- luminance %>%
     TRUE ~ "dye"
   ))
 
-#check if boundaries are greater than one worm length:
+#check if boundaries are greater than one worm length between start and end of assay:
 first_bound <- luminance %>%
   filter(lum_bin == "dye") %>%
   slice(1) %$% (ypos[1] - ypos[2]) * ybinwidth > 0.5
@@ -134,24 +135,29 @@ raw_residence <- full_join(luminance, ymat) %>%
   filter(!ypos < pixelsize, !ypos > max(ypos)-pixelsize) %>%
   mutate(y_mm = ypos / pixelsize)
 
+if(time_bins > 1) {
+  raw_residence <- raw_residence %>%
+  mutate(time_bin = as.numeric(cut(time, time_bins)))
+  }
+
 # calculate relative che index:
 #
 left_bound <-
   ypos_all %>%
-  # raw_residence %>%
   filter(lum_bin == "dye") %>% slice(1) %>%
   select(y_mm) %>% as.numeric()
 
 right_bound <-
   ypos_all %>%
-  # raw_residence %>%
   filter(y_mm > 6, lum_bin == "buffer") %>% slice(1) %>%
   select(y_mm) %>% as.numeric()
 
-length_buffer <- (left_bound - 1) + (max(ypos_all$y_mm) - right_bound)
+# subtract 1mm from each side for tack counts
+length_buffer <- (left_bound - 1) + (max(ypos_all$y_mm - 1) - right_bound)
 length_dye <- right_bound - left_bound
-total_length <- max(ypos_all$y_mm) - 1
+total_length <- max(ypos_all$y_mm) - 2
 
+if (time_bins == 1) {
 track_counts <- raw_residence %>%
   count(y_mm) %>%
   full_join(ypos_all) %>%
@@ -166,8 +172,34 @@ track_counts <- raw_residence %>%
          norm_tot_buf = (buffer / (length_buffer/total_length)),
          norm_tot_dye = dye / (length_dye/total_length),
          index = (norm_tot_dye - norm_tot_buf ) / (norm_tot_dye + norm_tot_buf))
+} else {
+  track_counts <- raw_residence %>%
+    count(time_bin, y_mm) %>%
+    full_join(ypos_all) %>%
+    mutate(n = ifelse(is.na(n),0,n)) %>%
+    group_by(time_bin, lum_bin) %>%
+    summarize(n = sum(n)) %>%
+    pivot_wider(names_from = lum_bin, values_from = n) %>%
+    mutate(n_tracks = buffer + dye,
+           length_buffer = length_buffer,
+           length_dye = length_dye,
+           length_total = total_length,
+           norm_tot_buf = (buffer / (length_buffer/total_length)),
+           norm_tot_dye = dye / (length_dye/total_length),
+           index = (norm_tot_dye - norm_tot_buf ) / (norm_tot_dye + norm_tot_buf))
+}
+
+if(time_bins >1) {
+ ypos_all <- ypos_all %>%
+   slice(rep(1:n(), each=time_bins)) %>%
+   mutate(time_bin = rep(1:time_bins, n()/time_bins)
+  )
+
+
+}
 
 #convert missing y positions to 0
+if(time_bins == 1) {
 rel_residence <- raw_residence %>%
   count(y_mm) %>%
   full_join(ypos_all) %>%
@@ -178,12 +210,35 @@ rel_residence <- raw_residence %>%
   summarize(count = sum(n),) %>%
   ungroup() %>%
   mutate(y_mm = seq(0,16.2, length.out = nrow(.)))
+} else {
+  rel_residence <- raw_residence %>%
+    count(time_bin, y_mm) %>%
+    full_join(ypos_all) %>%
+    mutate(n = ifelse(is.na(n),0,n)) %>%
+    mutate(ybin = cut(y_mm, y_bins),
+           ybin_numeric = as.numeric(as.factor(ybin))) %>%
+    group_by(ybin,ybin_numeric,lum_bin,time_bin) %>%
+    summarize(count = sum(n),) %>%
+    ungroup() %>%
+    mutate(y_mm = seq(0,16.2, length.out = nrow(.)))
+}
 
-mean_res <- mean(rel_residence$count)
+if (time_bins == 1) {
+  mean_res <- mean(rel_residence$count)
 
-rel_residence <- rel_residence %>%
+  rel_residence <- rel_residence %>%
   mutate(relres = count / mean_res)
+} else {
+    means <- rel_residence %>%
+      group_by(time_bin) %>%
+      summarize(mean_res = mean(count))
+
+  rel_residence <- full_join(rel_residence, means) %>%
+    mutate(relres = count / mean_res )
+  }
+
 #to plot histogram
+
 
 p.histogram <- raw_residence %>%
   ggplot(aes(y = y_mm)) +
@@ -194,43 +249,62 @@ p.histogram <- raw_residence %>%
   coord_cartesian(xlim=c(0,y_max), ylim = c(1,15), expand = FALSE) +
   theme(legend.position = "bottom")
 
+if( time_bins > 1) {
+  p.histogram <- p.histogram + facet_grid(.~time_bin)
+}
+
+
 # to plot heatmap
-p.heatmap <- rel_residence %>%
-  ggplot(aes(y = y_mm)) +
-  geom_raster(aes(fill = relres, x = 1)) +
+  p.heatmap <- rel_residence %>%
+    drop_na(relres) %>%
+    ggplot(aes(y = y_mm)) +
+    geom_raster(aes(fill = relres, x = 1)) +
     #     fill = stat(count) / mean(count),
     #     color = stat(count) / mean(count)),
     # na.rm = FALSE,
     # geom = "tile",
     # position = "identity",
     # bins = y_bins) +
-  coord_cartesian(xlim=c(0.5,1.5), ylim = c(0,16.2), expand = FALSE) +
-  labs(fill = "relative residence",
-       y = "position (mm)") +
-  theme(axis.text.x = element_blank(),
-        axis.title.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        legend.position = "bottom") +
-  scale_y_continuous(breaks = c(0,5,10,15)) +
-  scale_fill_distiller(
-    breaks = breaks,
-    labels = labels,
-    limits = limits,
-    oob=squish,
-    palette = heatmap_palette,
-    direction = plot.direction)
+    coord_cartesian(xlim=c(0.5,1.5), ylim = c(0,16.2), expand = FALSE) +
+    labs(fill = "relative residence",
+         y = "position (mm)") +
+    theme(axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          legend.position = "bottom") +
+    scale_y_continuous(breaks = c(0,5,10,15)) +
+    scale_fill_distiller(
+      breaks = breaks,
+      labels = labels,
+      limits = limits,
+      oob=squish,
+      palette = heatmap_palette,
+      direction = plot.direction)
+
+if (time_bins > 1 ) {
+  p.heatmap <- p.heatmap + facet_grid(.~time_bin)
+}
+
 
 
 write_csv(track_counts, file = file.path(folderPath,paste0(basename(folderPath),"index.csv")))
 write_csv(raw_residence, file = file.path(folderPath,paste0(basename(folderPath),"raw_residence.csv")))
 write_csv(rel_residence, file = file.path(folderPath,paste0(basename(folderPath),"rel_residence.csv")))
 
+if(time_bins == 1) {
+  ggsave(plot = p.heatmap,
+         filename = file.path(folderPath,paste0(basename(folderPath),"_heatmap.pdf")),
+         width = 1,
+         height = 4,
+         units = "in")
+} else {
+  ggsave(plot = p.heatmap,
+         filename = file.path(folderPath,paste0(basename(folderPath),"_heatmap.pdf")),
+         width = 1*time_bins,
+         height = 4,
+         units = "in")
+}
 
-ggsave(plot = p.heatmap,
-       filename = file.path(folderPath,paste0(basename(folderPath),"_heatmap.pdf")),
-       width = 1,
-       height = 4,
-       units = "in")
 
 ggsave(plot = p.histogram,
        filename = file.path(folderPath,paste0(basename(folderPath),"_histogram.pdf")),
@@ -238,6 +312,6 @@ ggsave(plot = p.histogram,
        height = 4,
        units = "in")
 
-return(list(raw_residence, rel_residence, p.histogram, p.heatmap))
+return(list(raw_residence,rel_residence,track_counts,p.heatmap,p.histogram))
 
 }
