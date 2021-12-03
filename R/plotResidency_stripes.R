@@ -157,7 +157,6 @@ length_buffer <- (left_bound - 1) + (max(ypos_all$y_mm - 1) - right_bound)
 length_dye <- right_bound - left_bound
 total_length <- max(ypos_all$y_mm) - 2
 
-if (time_bins == 1) {
 track_counts <- raw_residence %>%
   count(y_mm) %>%
   full_join(ypos_all) %>%
@@ -165,15 +164,17 @@ track_counts <- raw_residence %>%
   group_by(lum_bin) %>%
   summarize(n = sum(n)) %>%
   pivot_wider(names_from = lum_bin, values_from = n) %>%
-  mutate(n_tracks = buffer + dye,
+  mutate(time_bin = 0,
+         n_tracks = buffer + dye,
     length_buffer = length_buffer,
          length_dye = length_dye,
          length_total = total_length,
          norm_tot_buf = (buffer / (length_buffer/total_length)),
          norm_tot_dye = dye / (length_dye/total_length),
          index = (norm_tot_dye - norm_tot_buf ) / (norm_tot_dye + norm_tot_buf))
-} else {
-  track_counts <- raw_residence %>%
+
+if( time_bins > 1 )
+  track_counts.binned <- raw_residence %>%
     count(time_bin, y_mm) %>%
     full_join(ypos_all) %>%
     mutate(n = ifelse(is.na(n),0,n)) %>%
@@ -187,7 +188,9 @@ track_counts <- raw_residence %>%
            norm_tot_buf = (buffer / (length_buffer/total_length)),
            norm_tot_dye = dye / (length_dye/total_length),
            index = (norm_tot_dye - norm_tot_buf ) / (norm_tot_dye + norm_tot_buf))
-}
+
+if (time_bins >1)
+track_counts <- rbind(track_counts, track_counts.binned)
 
 if(time_bins >1) {
  ypos_all <- ypos_all %>%
@@ -195,11 +198,10 @@ if(time_bins >1) {
    mutate(time_bin = rep(1:time_bins, n()/time_bins)
   )
 
-
 }
 
 #convert missing y positions to 0
-if(time_bins == 1) {
+
 rel_residence <- raw_residence %>%
   count(y_mm) %>%
   full_join(ypos_all) %>%
@@ -210,8 +212,9 @@ rel_residence <- raw_residence %>%
   summarize(count = sum(n),) %>%
   ungroup() %>%
   mutate(y_mm = seq(0,16.2, length.out = nrow(.)))
-} else {
-  rel_residence <- raw_residence %>%
+
+if (time_bins >1) {
+  rel_residence.binned <- raw_residence %>%
     count(time_bin, y_mm) %>%
     full_join(ypos_all) %>%
     mutate(n = ifelse(is.na(n),0,n)) %>%
@@ -223,19 +226,20 @@ rel_residence <- raw_residence %>%
     mutate(y_mm = seq(0,16.2, length.out = nrow(.)))
 }
 
-if (time_bins == 1) {
+
   mean_res <- mean(rel_residence$count)
 
   rel_residence <- rel_residence %>%
   mutate(relres = count / mean_res)
-} else {
-    means <- rel_residence %>%
+
+  if(time_bins >1) {
+    means <- rel_residence.binned %>%
       group_by(time_bin) %>%
       summarize(mean_res = mean(count))
 
-  rel_residence <- full_join(rel_residence, means) %>%
-    mutate(relres = count / mean_res )
-  }
+    rel_residence.binned <- full_join(rel_residence.binned, means) %>%
+      mutate(relres = count / mean_res )
+}
 
 #to plot histogram
 
@@ -250,7 +254,15 @@ p.histogram <- raw_residence %>%
   theme(legend.position = "bottom")
 
 if( time_bins > 1) {
-  p.histogram <- p.histogram + facet_grid(.~time_bin)
+  p.histogram.binned <- raw_residence %>%
+    ggplot(aes(y = y_mm)) +
+    geom_histogram(aes(x = stat(count) / mean(count), fill = lum_bin), bins = y_bins) +
+    labs(y = "position (mm)",
+         x = "relative residence") +
+    scale_fill_manual(values = c("grey", "lightblue")) +
+    coord_cartesian(xlim=c(0,y_max), ylim = c(1,15), expand = FALSE) +
+    theme(legend.position = "bottom") +
+    facet_grid(.~time_bin)
 }
 
 
@@ -282,7 +294,32 @@ if( time_bins > 1) {
       direction = plot.direction)
 
 if (time_bins > 1 ) {
-  p.heatmap <- p.heatmap + facet_grid(.~time_bin)
+  p.heatmap.binned <- rel_residence.binned %>%
+    drop_na(relres) %>%
+    ggplot(aes(y = y_mm)) +
+    geom_raster(aes(fill = relres, x = 1)) +
+    #     fill = stat(count) / mean(count),
+    #     color = stat(count) / mean(count)),
+    # na.rm = FALSE,
+    # geom = "tile",
+    # position = "identity",
+    # bins = y_bins) +
+    coord_cartesian(xlim=c(0.5,1.5), ylim = c(0,16.2), expand = FALSE) +
+    labs(fill = "relative residence",
+         y = "position (mm)") +
+    theme(axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          legend.position = "bottom") +
+    scale_y_continuous(breaks = c(0,5,10,15)) +
+    scale_fill_distiller(
+      breaks = breaks,
+      labels = labels,
+      limits = limits,
+      oob=squish,
+      palette = heatmap_palette,
+      direction = plot.direction) +
+    facet_grid(.~time_bin)
 }
 
 
@@ -291,20 +328,22 @@ write_csv(track_counts, file = file.path(folderPath,paste0(basename(folderPath),
 write_csv(raw_residence, file = file.path(folderPath,paste0(basename(folderPath),"raw_residence.csv")))
 write_csv(rel_residence, file = file.path(folderPath,paste0(basename(folderPath),"rel_residence.csv")))
 
-if(time_bins == 1) {
+if (time_bins >1 ) {
+  write_csv(rel_residence.binned, file = file.path(folderPath,paste0(basename(folderPath),"rel_residence_binned.csv")))
+}
+
   ggsave(plot = p.heatmap,
          filename = file.path(folderPath,paste0(basename(folderPath),"_heatmap.pdf")),
          width = 1,
          height = 4,
          units = "in")
-} else {
-  ggsave(plot = p.heatmap,
-         filename = file.path(folderPath,paste0(basename(folderPath),"_heatmap.pdf")),
+
+  if (time_bins >1)
+  ggsave(plot = p.heatmap.binned,
+         filename = file.path(folderPath,paste0(basename(folderPath),"_heatmap_binned.pdf")),
          width = 1*time_bins,
          height = 4,
          units = "in")
-}
-
 
 ggsave(plot = p.histogram,
        filename = file.path(folderPath,paste0(basename(folderPath),"_histogram.pdf")),
@@ -312,6 +351,33 @@ ggsave(plot = p.histogram,
        height = 4,
        units = "in")
 
-return(list(raw_residence,rel_residence,track_counts,p.heatmap,p.histogram))
+if(time_bins >1)
+  ggsave(plot = p.histogram.binned,
+         filename = file.path(folderPath,paste0(basename(folderPath),"_histogram_binned.pdf")),
+         width = 4,
+         height = 4,
+         units = "in")
+
+
+if (time_bins == 1) {
+
+  return(list(raw_residence,
+              rel_residence,
+              track_counts,
+              p.heatmap,
+              p.histogram))
+} else {
+  return(list(raw_residence,
+              rel_residence,
+              rel_residence.binned,
+              track_counts,
+              p.heatmap,
+              p.heatmap.binned,
+              p.histogram,
+              p.histogram.binned))
+  }
 
 }
+
+
+

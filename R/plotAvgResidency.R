@@ -47,9 +47,17 @@ plotAvgResidency <- function(folderPath,
     tibble() %>%
     mutate(filename = factor(basename(filename)))
 
+  if (time_bins > 1) {
+    merged_df_binned <- folderPath %>%
+      fs::dir_ls(path = .,
+                 glob = "*rel_residence_binned.csv*",
+                 recurse = TRUE) %>%
+      map_df(~data.table::fread(.),.id = "filename") %>%
+      tibble() %>%
+      mutate(filename = factor(basename(filename)))
+  }
 
 
-  if(time_bins == 1) {
   plot <- merged_df %>%
     group_by(ybin_numeric) %>%
     summarize(relres = mean(relres)) %>%
@@ -62,8 +70,9 @@ plotAvgResidency <- function(folderPath,
                   color = bordercolor) +
     labs(y = "position (mm)",x = "relative residence") +
     scale_x_continuous(limits = c(0,y_max), expand = c(0,0))
-  } else {
-    plot <- merged_df %>%
+
+  if( time_bins > 1 ) {
+    plot.binned <- merged_df_binned %>%
       drop_na(relres) %>%
       group_by(ybin_numeric, time_bin) %>%
       summarize(relres = mean(relres)) %>%
@@ -79,8 +88,15 @@ plotAvgResidency <- function(folderPath,
       facet_grid(.~time_bin)
   }
 
+ggsave(plot = plot, filename = file.path(folderPath,paste0(basename(folderPath),"_averageHistogram.pdf")), width = 4, height = 4, units = "in")
 
-  ggsave(plot = plot, filename = file.path(folderPath,paste0(basename(folderPath),"_averageHistogram.pdf")), width = 4, height = 4, units = "in")
+if (time_bins > 1) {
+  ggsave(plot = plot.binned, filename = file.path(folderPath,paste0(basename(folderPath),"_averageHistogram_binned.pdf")), width = 4, height = 4, units = "in")
+}
 
+if (time_bins == 1 ) {
   return(list(merged_df,plot))
+} else  {
+  return(list(merged_df,merged_df_binned, plot, plot.binned))
+}
 }
