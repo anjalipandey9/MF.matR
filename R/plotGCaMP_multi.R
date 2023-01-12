@@ -333,7 +333,7 @@ if(exp.fit == FALSE) {
     ggsave(plots, filename = file.path(folderPath,paste0(genotype,"_",cue,"_",neuron,"_",food,"_plots.png")),
            width = 11, height = 8.5, units = "in")
   }
-  write_csv(unnest(data, cols = c(data)), path = file.path(folderPath,paste0(genotype,"_",cue,"_",neuron,"_",food,"_rawdata.csv")))
+  write_csv(unnest(data, cols = c(data)), file = file.path(folderPath,paste0(genotype,"_",cue,"_",neuron,"_",food,"_rawdata.csv")))
 
 
   return(list(data = dplyr::full_join(data, plot_order), plot = plots))
